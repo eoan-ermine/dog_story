@@ -43,7 +43,7 @@ int main(int argc, const char* argv[]) {
 
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         net::signal_set signals(ioc, SIGINT, SIGTERM);
-        signals.async_wait([&ioc](const sys::error_code& ec, int signal_number) {
+        signals.async_wait([&ioc](const boost::system::error_code& ec, int signal_number) {
             if (!ec) {
                 ioc.stop();
             }
@@ -53,11 +53,11 @@ int main(int argc, const char* argv[]) {
         http_handler::RequestHandler handler{game};
 
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
-        /*
+        const auto address = net::ip::make_address("0.0.0.0");
+        constexpr net::ip::port_type port = 8080;
         http_server::ServeHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send) {
             handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
-        */
 
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         std::cout << "Server has started..."sv << std::endl;
