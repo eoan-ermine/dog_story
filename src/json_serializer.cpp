@@ -35,7 +35,7 @@ json::value Serialize(const Road& road) {
 
     const auto& [start_x, start_y] = road.GetStart();
     object["x0"sv] = start_x;
-    object["x0"sv] = start_y;
+    object["y0"sv] = start_y;
 
     const auto& [end_x, end_y] = road.GetEnd();
     if (road.IsVertical()) {
