@@ -1,6 +1,7 @@
 #include "sdk.h"
 //
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <iostream>
 #include <thread>
 
@@ -41,6 +42,12 @@ int main(int argc, const char* argv[]) {
         net::io_context ioc(num_threads);
 
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
+        net::signal_set signals(ioc, SIGINT, SIGTERM);
+        signals.async_wait([&ioc](const sys::error_code& ec, int signal_number) {
+            if (!ec) {
+                ioc.stop();
+            }
+        });
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         http_handler::RequestHandler handler{game};
