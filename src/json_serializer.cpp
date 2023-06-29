@@ -6,7 +6,7 @@ namespace json = boost::json;
 
 using namespace std::literals;
 
-json::value serialize_error(std::string_view code, std::string_view message) {
+json::value SerializeError(std::string_view code, std::string_view message) {
     json::object object;
 
     object["code"sv] = code;
@@ -15,7 +15,7 @@ json::value serialize_error(std::string_view code, std::string_view message) {
     return json::value(std::move(object));
 }
 
-json::value serialize(const Game::Maps& maps) {
+json::value Serialize(const Game::Maps& maps) {
     json::array maps_array;
 
     for (const auto& map: maps) {
@@ -30,7 +30,7 @@ json::value serialize(const Game::Maps& maps) {
 
 namespace details {
 
-json::value serialize(const Road& road) {
+json::value Serialize(const Road& road) {
     json::object object;
 
     const auto& [start_x, start_y] = road.GetStart();
@@ -47,7 +47,7 @@ json::value serialize(const Road& road) {
     return json::value(std::move(object));
 }
 
-json::value serialize(const Building& building) {
+json::value Serialize(const Building& building) {
     json::object object;
 
     const auto& [position, size] = building.GetBounds();
@@ -59,7 +59,7 @@ json::value serialize(const Building& building) {
     return json::value(std::move(object));
 }
 
-json::value serialize(const Office& office) {
+json::value Serialize(const Office& office) {
     json::object object;
 
     const auto& id = office.GetId();
@@ -77,7 +77,7 @@ json::value serialize(const Office& office) {
 
 }  // namespace details
 
-json::value serialize(const Map& map) {
+json::value Serialize(const Map& map) {
     json::object object;
 
     object["id"] = *map.GetId();
@@ -85,19 +85,19 @@ json::value serialize(const Map& map) {
 
     json::array roads_array;
     for (const auto& road: map.GetRoads()) {
-        roads_array.push_back(details::serialize(road));
+        roads_array.push_back(details::Serialize(road));
     }
     object["roads"] = roads_array;
 
     json::array buildings_array;
     for (const auto& building: map.GetBuildings()) {
-        buildings_array.push_back(details::serialize(building));
+        buildings_array.push_back(details::Serialize(building));
     }
     object["buildings"] = buildings_array;
 
     json::array offices_array;
     for (const auto& office: map.GetOffices()) {
-        offices_array.push_back(details::serialize(office));
+        offices_array.push_back(details::Serialize(office));
     }
     object["offices"] = offices_array;
 

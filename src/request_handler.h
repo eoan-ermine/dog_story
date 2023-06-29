@@ -46,19 +46,19 @@ public:
         std::string_view endpoint = "/api/v1/maps";
 
         if (target == endpoint) {
-            send(json_response(http::status::ok, serialize(game_.GetMaps())));
+            send(json_response(http::status::ok, Serialize(game_.GetMaps())));
         } else if (target.starts_with(endpoint)) {
             auto map_id = Map::Id{std::string{endpoint.substr(endpoint.size())}};
             const auto* map_ptr = game_.FindMap(map_id);
 
             if (map_ptr == nullptr)
                 send(json_response(http::status::not_found,
-                                   serialize_error("mapNotFound"sv, "Map not found")));
+                                   SerializeError("mapNotFound"sv, "Map not found")));
             else
-                send(json_response(http::status::ok, serialize(*map_ptr)));
+                send(json_response(http::status::ok, Serialize(*map_ptr)));
         } else if (target.starts_with("/api/"sv)) {
             send(json_response(http::status::not_found,
-                               serialize_error("badRequest"sv, "Bad request")));
+                               SerializeError("badRequest"sv, "Bad request")));
         }
     }
 
