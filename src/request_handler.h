@@ -47,8 +47,9 @@ public:
 
         if (target == endpoint) {
             send(json_response(http::status::ok, Serialize(game_.GetMaps())));
-        } else if (target.starts_with(endpoint)) {
-            auto map_id = Map::Id{std::string{endpoint.substr(endpoint.size())}};
+        } else if (target.starts_with(endpoint) && !target.ends_with("/"sv)) {
+            std::string_view id = target.substr(endpoint.size() + 1);
+            auto map_id = Map::Id{std::string{id}};
             const auto* map_ptr = game_.FindMap(map_id);
 
             if (map_ptr == nullptr)
