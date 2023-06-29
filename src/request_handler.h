@@ -13,6 +13,7 @@ namespace http = beast::http;
 namespace json = boost::json;
 
 using namespace std::literals;
+using namespace model;
 
 using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
@@ -41,24 +42,28 @@ public:
                                       request.version(), request.keep_alive(), "application/json"sv);
         };
 
+        auto target = request.target();
         std::string_view endpoint = "/api/v1/maps";
-        if (request.target() == endpoint) {
+
+        if (target == endpoint) {
             send(json_response(http::status::ok, serialize(game_.GetMaps())));
-        } else if (request.target().starts_with(endpoint)) {
+        } else if (target.starts_with(endpoint)) {
             auto map_id = Map::Id{std::string{endpoint.substr(endpoint.size())}};
-            const auto* map_ptr = maps_.FindMap(map_id)
+            const auto* map_ptr = game_.FindMap(map_id);
 
             if (map_ptr == nullptr)
-                send(json_response(http::status::bad_request,
-                                   serialize_error("badRequest"sv, "Bad request")));
-            else {
+                send(json_response(http::status::not_found,
+                                   serialize_error("mapNotFound"sv, "Map not found")));
+            else
                 send(json_response(http::status::ok, serialize(*map_ptr)));
-            }
+        } else if (target.starts_with("/api/"sv)) {
+            send(json_response(http::status::not_found,
+                               serialize_error("badRequest"sv, "Bad request")));
         }
     }
 
 private:
-    model::Game& game_;
+    Game& game_;
 };
 
 }  // namespace request_handler
