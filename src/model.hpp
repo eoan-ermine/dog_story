@@ -1,4 +1,7 @@
 #pragma once
+
+#include <boost/json.hpp>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -6,6 +9,8 @@
 #include "tagged.hpp"
 
 namespace model {
+
+using namespace boost::json;
 
 using Dimension = int;
 using Coord = Dimension;
@@ -57,6 +62,11 @@ class Road {
     Point end_;
 };
 
+// Serialize road structure to json value
+void tag_invoke(value_from_tag, value& value, const Road& road);
+// Deserialize json value to road structure
+Road tag_invoke(value_to_tag<Road>, const value &value);
+
 class Building {
   public:
     explicit Building(Rectangle bounds) noexcept : bounds_{bounds} {}
@@ -66,6 +76,11 @@ class Building {
   private:
     Rectangle bounds_;
 };
+
+// Serialize building structure to json value
+void tag_invoke(value_from_tag, value& value, const Building& building);
+// Deserialize json value to building structure
+Building tag_invoke(value_to_tag<Building>, const value &value);
 
 class Office {
   public:
@@ -84,6 +99,11 @@ class Office {
     Point position_;
     Offset offset_;
 };
+
+// Serialize office structure to json value
+void tag_invoke(value_from_tag, value& value, const Office& office);
+// Deserialize json value to office structure
+Office tag_invoke(value_to_tag<Office>, const value &value);
 
 class Map {
   public:
@@ -106,9 +126,21 @@ class Map {
 
     void AddRoad(const Road &road) { roads_.emplace_back(road); }
 
+    void AddRoads(const Roads &roads) {
+      std::for_each(roads.begin(), roads.end(), [this](const auto& road) { AddRoad(road); });
+    }
+
     void AddBuilding(const Building &building) { buildings_.emplace_back(building); }
 
+    void AddBuildings(const Buildings &buildings) {
+      std::for_each(buildings.begin(), buildings.end(), [this](const auto& building) { AddBuilding(building); });
+    }
+
     void AddOffice(Office office);
+
+    void AddOffices(const Offices &offices) {
+      std::for_each(offices.begin(), offices.end(), [this](const auto& office) { AddOffice(office); });
+    }
 
   private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -122,11 +154,20 @@ class Map {
     Offices offices_;
 };
 
+// Serialize map structure to json value
+void tag_invoke(value_from_tag, value& value, const Map& map);
+// Deserialize json value to map structure
+Map tag_invoke(value_to_tag<Map>, const value &value);
+
 class Game {
   public:
     using Maps = std::vector<Map>;
 
     void AddMap(Map map);
+
+    void AddMaps(const Maps &maps) {
+      std::for_each(maps.begin(), maps.end(), [this](const auto& map) { AddMap(map); });
+    }
 
     const Maps &GetMaps() const noexcept { return maps_; }
 
@@ -144,5 +185,10 @@ class Game {
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
 };
+
+// Deserialize json value to game structure
+Game tag_invoke(value_to_tag<Game>, const value &value);
+// Serialize maps to json value
+void tag_invoke(value_from_tag, value& value, const Game::Maps& maps);
 
 } // namespace model

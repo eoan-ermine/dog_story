@@ -3,7 +3,7 @@
 #include <boost/json.hpp>
 
 #include "http_server.hpp"
-#include "json_serializer.hpp"
+#include "error.hpp"
 #include "model.hpp"
 
 namespace request_handler {
@@ -32,7 +32,7 @@ class RequestHandler {
 
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>> &&request, Send &&send) {
-        using namespace json_serializer;
+        using namespace util;
 
         auto json_response = [&request](http::status status, json::value value) {
             return MakeStringResponse(status, json::serialize(value), request.version(), request.keep_alive(),
@@ -43,18 +43,18 @@ class RequestHandler {
         std::string_view endpoint = "/api/v1/maps";
 
         if (target == endpoint) {
-            send(json_response(http::status::ok, Serialize(game_.GetMaps())));
+            send(json_response(http::status::ok, json::value_from(game_.GetMaps())));
         } else if (target.starts_with(endpoint) && !target.ends_with("/"sv)) {
             std::string_view id = target.substr(endpoint.size() + 1);
             auto map_id = Map::Id{std::string{id}};
             const auto *map_ptr = game_.FindMap(map_id);
 
             if (map_ptr == nullptr)
-                send(json_response(http::status::not_found, SerializeError("mapNotFound"sv, "Map not found")));
+                send(json_response(http::status::not_found, json::value_from(Error { "mapNotFound"sv, "Map not found"sv })));
             else
-                send(json_response(http::status::ok, Serialize(*map_ptr)));
+                send(json_response(http::status::ok, json::value_from(*map_ptr)));
         } else if (target.starts_with("/api/"sv)) {
-            send(json_response(http::status::bad_request, SerializeError("badRequest"sv, "Bad request")));
+            send(json_response(http::status::bad_request, json::value_from(Error { "badRequest"sv, "Bad request"sv })));
         }
     }
 
