@@ -3,7 +3,7 @@
 #include <boost/json.hpp>
 
 #include "http_server.hpp"
-#include "error.hpp"
+#include "util/error.hpp"
 #include "model.hpp"
 
 namespace request_handler {

@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "tagged.hpp"
+#include "util/tagged.hpp"
 
 namespace model {
 
