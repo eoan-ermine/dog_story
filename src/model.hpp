@@ -114,6 +114,15 @@ class Map {
 
     Map(Id id, std::string name) noexcept : id_(std::move(id)), name_(std::move(name)) {}
 
+    Map(Id id, std::string name, Roads &&roads, Buildings &&buildings, Offices &&offices) noexcept
+        : Map(std::move(id), std::move(name)) {
+        roads_ = std::move(roads);
+        buildings_ = std::move(buildings);
+        for (auto &&office : offices) {
+            AddOffice(std::move(office));
+        }
+    }
+
     const Id &GetId() const noexcept { return id_; }
 
     const std::string &GetName() const noexcept { return name_; }
@@ -124,23 +133,7 @@ class Map {
 
     const Offices &GetOffices() const noexcept { return offices_; }
 
-    void AddRoad(const Road &road) { roads_.emplace_back(road); }
-
-    void AddRoads(const Roads &roads) {
-        std::for_each(roads.begin(), roads.end(), [this](const auto &road) { AddRoad(road); });
-    }
-
-    void AddBuilding(const Building &building) { buildings_.emplace_back(building); }
-
-    void AddBuildings(const Buildings &buildings) {
-        std::for_each(buildings.begin(), buildings.end(), [this](const auto &building) { AddBuilding(building); });
-    }
-
-    void AddOffice(Office office);
-
-    void AddOffices(const Offices &offices) {
-        std::for_each(offices.begin(), offices.end(), [this](const auto &office) { AddOffice(office); });
-    }
+    void AddOffice(Office &&office);
 
   private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -163,11 +156,13 @@ class Game {
   public:
     using Maps = std::vector<Map>;
 
-    void AddMap(Map map);
-
-    void AddMaps(const Maps &maps) {
-        std::for_each(maps.begin(), maps.end(), [this](const auto &map) { AddMap(map); });
+    explicit Game(Maps &&maps) {
+        for (auto &&map : maps) {
+            AddMap(std::move(map));
+        }
     }
+
+    void AddMap(Map &&map);
 
     const Maps &GetMaps() const noexcept { return maps_; }
 

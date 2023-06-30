@@ -83,22 +83,14 @@ Map tag_invoke(value_to_tag<Map>, const value &value) {
     auto id = to_string(obj.at("id"sv).as_string());
     auto name = to_string(obj.at("name"sv).as_string());
 
-    Map map{Map::Id{id}, name};
-
-    map.AddRoads(value_to<std::vector<Road>>(obj.at("roads")));
-    map.AddBuildings(value_to<std::vector<Building>>(obj.at("buildings")));
-    map.AddOffices(value_to<std::vector<Office>>(obj.at("offices")));
-
-    return map;
+    return {Map::Id{id}, name, value_to<std::vector<Road>>(obj.at("roads")),
+            value_to<std::vector<Building>>(obj.at("buildings")), value_to<std::vector<Office>>(obj.at("offices"))};
 }
 
 Game tag_invoke(value_to_tag<Game>, const value &value) {
     const object &obj = value.as_object();
 
-    Game game;
-    game.AddMaps(value_to<std::vector<Map>>(obj.at("maps")));
-
-    return game;
+    return Game{value_to<std::vector<Map>>(obj.at("maps"))};
 }
 
 void tag_invoke(value_from_tag, value &value, const Game::Maps &maps) {
@@ -114,7 +106,7 @@ void tag_invoke(value_from_tag, value &value, const Game::Maps &maps) {
     value = maps_array;
 }
 
-void Map::AddOffice(Office office) {
+void Map::AddOffice(Office &&office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
         throw std::invalid_argument("Duplicate warehouse");
     }
@@ -130,7 +122,7 @@ void Map::AddOffice(Office office) {
     }
 }
 
-void Game::AddMap(Map map) {
+void Game::AddMap(Map &&map) {
     const size_t index = maps_.size();
     if (auto [it, inserted] = map_id_to_index_.emplace(map.GetId(), index); !inserted) {
         throw std::invalid_argument("Map with id "s + *map.GetId() + " already exists"s);
