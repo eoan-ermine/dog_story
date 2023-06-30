@@ -3,8 +3,7 @@
 namespace request_handler {
 
 // Создаёт StringResponse с заданными параметрами
-StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version,
-                                  bool keep_alive,
+StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version, bool keep_alive,
                                   std::string_view content_type) {
     StringResponse response(status, http_version);
     response.set(http::field::content_type, content_type);
@@ -14,5 +13,4 @@ StringResponse MakeStringResponse(http::status status, std::string_view body, un
     return response;
 }
 
-
-}  // namespace request_handler
+} // namespace request_handler

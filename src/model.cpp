@@ -11,7 +11,7 @@ void Map::AddOffice(Office office) {
     }
 
     const size_t index = offices_.size();
-    Office& o = offices_.emplace_back(std::move(office));
+    Office &o = offices_.emplace_back(std::move(office));
     try {
         warehouse_id_to_index_.emplace(o.GetId(), index);
     } catch (...) {
@@ -35,4 +35,4 @@ void Game::AddMap(Map map) {
     }
 }
 
-}  // namespace model
+} // namespace model

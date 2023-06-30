@@ -23,16 +23,15 @@ void SessionBase::Read() {
 void SessionBase::Run() {
     // Вызываем метод Read, используя executor объекта stream_.
     // Таким образом вся работа со stream_ будет выполняться, используя его executor
-    net::dispatch(stream_.get_executor(),
-                  beast::bind_front_handler(&SessionBase::Read, GetSharedThis()));
+    net::dispatch(stream_.get_executor(), beast::bind_front_handler(&SessionBase::Read, GetSharedThis()));
 }
 
 void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read) {
     using namespace std::literals;
     if (ec == http::error::end_of_stream) {
         // Нормальная ситуация - клиент закрыл соединение
-        return Close(); 
-    }    
+        return Close();
+    }
     if (ec) {
         return ReportError(ec, "read"sv);
     }
@@ -58,4 +57,4 @@ void SessionBase::Close() {
     stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
 }
 
-}  // namespace http_server
+} // namespace http_server

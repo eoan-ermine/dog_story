@@ -15,7 +15,7 @@ namespace {
 
 // Запускает функцию fn на n потоках, включая текущий
 template <typename Fn>
-void RunWorkers(unsigned n, const Fn& fn) {
+void RunWorkers(unsigned n, const Fn &fn) {
     n = std::max(1u, n);
     std::vector<std::jthread> workers;
     workers.reserve(n - 1);
@@ -26,9 +26,9 @@ void RunWorkers(unsigned n, const Fn& fn) {
     fn();
 }
 
-}  // namespace
+} // namespace
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: game_server <game-config-json>"sv << std::endl;
         return EXIT_FAILURE;
@@ -43,7 +43,7 @@ int main(int argc, const char* argv[]) {
 
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         net::signal_set signals(ioc, SIGINT, SIGTERM);
-        signals.async_wait([&ioc](const boost::system::error_code& ec, int signal_number) {
+        signals.async_wait([&ioc](const boost::system::error_code &ec, int signal_number) {
             if (!ec) {
                 ioc.stop();
             }
@@ -55,7 +55,7 @@ int main(int argc, const char* argv[]) {
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");
         constexpr net::ip::port_type port = 8080;
-        http_server::ServeHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send) {
+        http_server::ServeHttp(ioc, {address, port}, [&handler](auto &&req, auto &&send) {
             handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
 
@@ -63,10 +63,8 @@ int main(int argc, const char* argv[]) {
         std::cout << "Server has started..."sv << std::endl;
 
         // 6. Запускаем обработку асинхронных операций
-        RunWorkers(std::max(1u, num_threads), [&ioc] {
-            ioc.run();
-        });
-    } catch (const std::exception& ex) {
+        RunWorkers(std::max(1u, num_threads), [&ioc] { ioc.run(); });
+    } catch (const std::exception &ex) {
         std::cerr << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
