@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "tagged.h"
+#include "tagged.hpp"
 
 namespace model {
 

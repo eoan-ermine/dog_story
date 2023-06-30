@@ -1,12 +1,12 @@
-#include "sdk.h"
+#include "sdk.hpp"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <iostream>
 #include <thread>
 
-#include "json_loader.h"
-#include "request_handler.h"
+#include "json_loader.hpp"
+#include "request_handler.hpp"
 
 using namespace std::literals;
 namespace net = boost::asio;

@@ -2,7 +2,7 @@
 
 #include <boost/json.hpp>
 
-#include "model.h"
+#include "model.hpp"
 
 namespace json_serializer {
 

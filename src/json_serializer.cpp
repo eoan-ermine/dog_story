@@ -1,4 +1,4 @@
-#include "json_serializer.h"
+#include "json_serializer.hpp"
 
 namespace json_serializer {
 

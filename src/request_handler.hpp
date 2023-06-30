@@ -2,9 +2,9 @@
 
 #include <boost/json.hpp>
 
-#include "json_serializer.h"
-#include "http_server.h"
-#include "model.h"
+#include "json_serializer.hpp"
+#include "http_server.hpp"
+#include "model.hpp"
 
 namespace request_handler {
 
