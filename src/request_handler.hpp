@@ -3,8 +3,8 @@
 #include <boost/json.hpp>
 
 #include "http_server.hpp"
-#include "util/error.hpp"
 #include "model.hpp"
+#include "util/error.hpp"
 
 namespace request_handler {
 
@@ -50,11 +50,12 @@ class RequestHandler {
             const auto *map_ptr = game_.FindMap(map_id);
 
             if (map_ptr == nullptr)
-                send(json_response(http::status::not_found, json::value_from(Error { "mapNotFound"sv, "Map not found"sv })));
+                send(json_response(http::status::not_found,
+                                   json::value_from(Error{"mapNotFound"sv, "Map not found"sv})));
             else
                 send(json_response(http::status::ok, json::value_from(*map_ptr)));
         } else if (target.starts_with("/api/"sv)) {
-            send(json_response(http::status::bad_request, json::value_from(Error { "badRequest"sv, "Bad request"sv })));
+            send(json_response(http::status::bad_request, json::value_from(Error{"badRequest"sv, "Bad request"sv})));
         }
     }
 

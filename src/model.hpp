@@ -63,7 +63,7 @@ class Road {
 };
 
 // Serialize road structure to json value
-void tag_invoke(value_from_tag, value& value, const Road& road);
+void tag_invoke(value_from_tag, value &value, const Road &road);
 // Deserialize json value to road structure
 Road tag_invoke(value_to_tag<Road>, const value &value);
 
@@ -78,7 +78,7 @@ class Building {
 };
 
 // Serialize building structure to json value
-void tag_invoke(value_from_tag, value& value, const Building& building);
+void tag_invoke(value_from_tag, value &value, const Building &building);
 // Deserialize json value to building structure
 Building tag_invoke(value_to_tag<Building>, const value &value);
 
@@ -101,7 +101,7 @@ class Office {
 };
 
 // Serialize office structure to json value
-void tag_invoke(value_from_tag, value& value, const Office& office);
+void tag_invoke(value_from_tag, value &value, const Office &office);
 // Deserialize json value to office structure
 Office tag_invoke(value_to_tag<Office>, const value &value);
 
@@ -127,19 +127,19 @@ class Map {
     void AddRoad(const Road &road) { roads_.emplace_back(road); }
 
     void AddRoads(const Roads &roads) {
-      std::for_each(roads.begin(), roads.end(), [this](const auto& road) { AddRoad(road); });
+        std::for_each(roads.begin(), roads.end(), [this](const auto &road) { AddRoad(road); });
     }
 
     void AddBuilding(const Building &building) { buildings_.emplace_back(building); }
 
     void AddBuildings(const Buildings &buildings) {
-      std::for_each(buildings.begin(), buildings.end(), [this](const auto& building) { AddBuilding(building); });
+        std::for_each(buildings.begin(), buildings.end(), [this](const auto &building) { AddBuilding(building); });
     }
 
     void AddOffice(Office office);
 
     void AddOffices(const Offices &offices) {
-      std::for_each(offices.begin(), offices.end(), [this](const auto& office) { AddOffice(office); });
+        std::for_each(offices.begin(), offices.end(), [this](const auto &office) { AddOffice(office); });
     }
 
   private:
@@ -155,7 +155,7 @@ class Map {
 };
 
 // Serialize map structure to json value
-void tag_invoke(value_from_tag, value& value, const Map& map);
+void tag_invoke(value_from_tag, value &value, const Map &map);
 // Deserialize json value to map structure
 Map tag_invoke(value_to_tag<Map>, const value &value);
 
@@ -166,7 +166,7 @@ class Game {
     void AddMap(Map map);
 
     void AddMaps(const Maps &maps) {
-      std::for_each(maps.begin(), maps.end(), [this](const auto& map) { AddMap(map); });
+        std::for_each(maps.begin(), maps.end(), [this](const auto &map) { AddMap(map); });
     }
 
     const Maps &GetMaps() const noexcept { return maps_; }
@@ -189,6 +189,6 @@ class Game {
 // Deserialize json value to game structure
 Game tag_invoke(value_to_tag<Game>, const value &value);
 // Serialize maps to json value
-void tag_invoke(value_from_tag, value& value, const Game::Maps& maps);
+void tag_invoke(value_from_tag, value &value, const Game::Maps &maps);
 
 } // namespace model
