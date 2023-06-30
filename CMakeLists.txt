@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 project(game_server CXX)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(Boost 1.78.0 REQUIRED COMPONENTS json)
+find_package(Boost 1.82.0 REQUIRED COMPONENTS json)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()

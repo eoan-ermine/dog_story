@@ -1,9 +1,6 @@
 #pragma once
 #include "sdk.h"
 
-// boost.beast будет использовать std::string_view вместо boost::string_view
-#define BOOST_BEAST_USE_STD_STRING_VIEW
-
 #include <string_view>
 #include <iostream>
 #include <boost/asio/ip/tcp.hpp>
