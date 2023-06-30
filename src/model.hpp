@@ -133,10 +133,10 @@ class Map {
 
     const Offices &GetOffices() const noexcept { return offices_; }
 
-    void AddOffice(Office &&office);
-
   private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
+
+    void AddOffice(Office &&office);
 
     Id id_;
     std::string name_;
@@ -162,8 +162,6 @@ class Game {
         }
     }
 
-    void AddMap(Map &&map);
-
     const Maps &GetMaps() const noexcept { return maps_; }
 
     const Map *FindMap(const Map::Id &id) const noexcept {
@@ -176,6 +174,8 @@ class Game {
   private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
+
+    void AddMap(Map &&map);
 
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
