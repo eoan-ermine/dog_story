@@ -3,14 +3,18 @@
 namespace request_handler {
 
 // Создаёт StringResponse с заданными параметрами
-StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version, bool keep_alive,
-                                  std::string_view content_type) {
-    StringResponse response(status, http_version);
-    response.set(http::field::content_type, content_type);
+StringResponse MakeJsonResponse(http::status status, std::string_view body) {
+    StringResponse response;
+    response.result(status);
+    response.set(http::field::content_type, "application/json"sv);
     response.body() = body;
     response.content_length(body.size());
-    response.keep_alive(keep_alive);
     return response;
+}
+
+void FinalizeJsonResponse(StringResponse &response, unsigned http_version, bool keep_alive) {
+    response.version(http_version);
+    response.keep_alive(keep_alive);
 }
 
 } // namespace request_handler
