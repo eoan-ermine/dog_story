@@ -64,6 +64,8 @@ int main(int argc, const char *argv[]) {
 
         // 6. Запускаем обработку асинхронных операций
         RunWorkers(std::max(1u, num_threads), [&ioc] { ioc.run(); });
+
+        return EXIT_SUCCESS;
     } catch (const std::exception &ex) {
         std::cerr << ex.what() << std::endl;
         return EXIT_FAILURE;
