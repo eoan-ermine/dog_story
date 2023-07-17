@@ -31,7 +31,7 @@ class RequestHandler {
     RequestHandler &operator=(const RequestHandler &) = delete;
 
     template <typename Body, typename Allocator, typename Send>
-    void operator()(http::request<Body, http::basic_fields<Allocator>> &&request, Send &&send) {
+    void operator()(http::request<Body, http::basic_fields<Allocator>> &&request, Send &&send) const {
         auto target = request.target();
         std::string_view endpoint = "/api/v1/maps";
         StringResponse response;
@@ -51,17 +51,17 @@ class RequestHandler {
     }
 
   private:
-    StringResponse json_response(http::status status, json::value value) {
+    StringResponse json_response(http::status status, json::value value) const {
         return MakeJsonResponse(status, json::serialize(value));
     }
 
     // Handle get maps request
     // Endpoint: /api/v1/maps
-    StringResponse get_maps() { return json_response(http::status::ok, json::value_from(game_.GetMaps())); }
+    StringResponse get_maps() const { return json_response(http::status::ok, json::value_from(game_.GetMaps())); }
 
     // Handle get map request
     // Endpoint: /api/v1/maps/{id}
-    StringResponse get_map(model::Map::Id id) {
+    StringResponse get_map(model::Map::Id id) const {
         const auto *map_ptr = game_.FindMap(id);
 
         if (map_ptr == nullptr)
@@ -71,9 +71,8 @@ class RequestHandler {
             return json_response(http::status::ok, json::value_from(*map_ptr));
     }
 
-    // Handle bad request
-    // Endpoint: all except known endpoints
-    StringResponse bad_request() {
+    // Bad request response
+    StringResponse bad_request() const {
         return json_response(http::status::bad_request, json::value_from(util::Error{"badRequest"sv, "Bad request"sv}));
     }
 
