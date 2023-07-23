@@ -9,6 +9,7 @@
 #include "model.hpp"
 #include "util/error.hpp"
 #include "util/filesystem.hpp"
+#include "util/mime_type.hpp"
 
 namespace request_handler {
 
@@ -66,18 +67,9 @@ class RequestHandler {
             auto path = GetPath(target, base_path_);
             if (ValidatePath(path, base_path_)) {
                 auto extension = path.extension().string();
-                std::transform(extension.begin(), extension.end(), extension.begin(),
-                               [](unsigned char c) { return std::tolower(c); });
-
-                std::string_view mime_type;
-                if (mime_types_.contains(extension)) {
-                    mime_type = mime_types_.at(extension);
-                } else {
-                    mime_type = "application/octet-stream"sv;
-                }
 
                 boost::system::error_code ec;
-                auto file_response = MakeFileResponse(http::status::ok, mime_type, path.string(), ec);
+                auto file_response = MakeFileResponse(http::status::ok, GetMimeType(extension), path.string(), ec);
                 if (!ec) {
                     FinalizeResponse(file_response, request.version(), request.keep_alive());
                     send(file_response);
@@ -117,17 +109,6 @@ class RequestHandler {
 
     model::Game &game_;
     fs::path base_path_;
-    std::unordered_map<std::string_view, std::string_view> mime_types_ = {
-        {".htm", "text/html"},       {".html", "text/html"},
-        {".css", "text/css"},        {".txt", "text/plain"},
-        {".js", "text/javascript"},  {".json", "application/json"},
-        {".xml", "application/xml"}, {".png", "image/png"},
-        {".jpg", "image/jpeg"},      {".jpe", "image/jpeg"},
-        {".jpeg", "image/jpeg"},     {".gif", "image/gif"},
-        {".bmp", "image/bmp"},       {".ico", "image/vnd.microsoft.icon"},
-        {".tiff", "image/tiff"},     {".tif", "image/tiff"},
-        {".svg", "image/svg+xml"},   {".svgz", "image/svg+xml"},
-        {".mp3", "audio/mpeg"}};
 };
 
 } // namespace request_handler

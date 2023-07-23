@@ -22,6 +22,8 @@ add_executable(game_server
 	src/util/error.cpp
 	src/util/filesystem.hpp
 	src/util/filesystem.cpp
+	src/util/mime_type.hpp
+	src/util/mime_type.cpp
 	src/util/tagged.hpp
 	src/json_loader.hpp
 	src/json_loader.cpp
