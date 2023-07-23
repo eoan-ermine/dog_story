@@ -10,6 +10,7 @@
 #include "util/error.hpp"
 #include "util/filesystem.hpp"
 #include "util/mime_type.hpp"
+#include "util/response.hpp"
 
 namespace request_handler {
 
@@ -21,9 +22,6 @@ namespace fs = std::filesystem;
 using namespace std::literals;
 
 using StringRequest = http::request<http::string_body>;
-// Ответ, тело которого представлено в виде строки
-using StringResponse = http::response<http::string_body>;
-using FileResponse = http::response<http::file_body>;
 
 // Создает text response
 StringResponse MakeTextResponse(http::status status, std::string_view body);
@@ -34,12 +32,6 @@ StringResponse MakeJsonResponse(http::status status, std::string_view body);
 // Создает file response
 FileResponse MakeFileResponse(http::status status, std::string_view mime_type, std::string_view filepath,
                               boost::system::error_code &ec);
-
-template <typename Body>
-void FinalizeResponse(http::response<Body> &response, unsigned http_version, bool keep_alive) {
-    response.version(http_version);
-    response.keep_alive(keep_alive);
-}
 
 class RequestHandler {
   public:
@@ -52,38 +44,22 @@ class RequestHandler {
     void operator()(http::request<Body, http::basic_fields<Allocator>> &&request, Send &&send) const {
         auto target = request.target();
         std::string_view endpoint = "/api/v1/maps";
-        StringResponse response;
+        Response response;
 
         if (target == endpoint) {
             response = get_maps();
         } else if (target.starts_with(endpoint) && !target.ends_with("/"sv)) {
             std::string_view id = target.substr(endpoint.size() + 1);
-            auto map_id = model::Map::Id{std::string{id}};
-            response = get_map(map_id);
+            response = get_map(model::Map::Id{std::string{id}});
         } else if (target.starts_with("/api/"sv)) {
             response = json_response(http::status::bad_request,
                                      json::value_from(util::Error{"badRequest"sv, "Bad request"sv}));
         } else {
-            auto path = GetPath(target, base_path_);
-            if (ValidatePath(path, base_path_)) {
-                auto extension = path.extension().string();
-
-                boost::system::error_code ec;
-                auto file_response = MakeFileResponse(http::status::ok, GetMimeType(extension), path.string(), ec);
-                if (!ec) {
-                    FinalizeResponse(file_response, request.version(), request.keep_alive());
-                    send(file_response);
-                    return;
-                } else {
-                    response = MakeTextResponse(http::status::not_found, "File not found");
-                }
-            } else {
-                response = MakeTextResponse(http::status::bad_request, "Invalid path");
-            }
+            response = get_file(target);
         }
 
-        FinalizeResponse(response, request.version(), request.keep_alive());
-        send(response);
+        response.finalize(request.version(), request.keep_alive());
+        response.send(send);
     }
 
   private:
@@ -105,6 +81,25 @@ class RequestHandler {
                                  json::value_from(util::Error{"mapNotFound"sv, "Map not found"sv}));
         else
             return json_response(http::status::ok, json::value_from(*map_ptr));
+    }
+
+    // Handle static files requests
+    Response get_file(std::string_view target) const {
+        Response response;
+
+        auto path = GetPath(target, base_path_);
+        if (ValidatePath(path, base_path_)) {
+            auto extension = path.extension().string();
+
+            boost::system::error_code ec;
+            response = MakeFileResponse(http::status::ok, GetMimeType(extension), path.string(), ec);
+            if (ec)
+                response = MakeTextResponse(http::status::not_found, "File not found");
+        } else {
+            response = MakeTextResponse(http::status::bad_request, "Invalid path");
+        }
+
+        return response;
     }
 
     model::Game &game_;
