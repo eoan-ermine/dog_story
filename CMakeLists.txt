@@ -14,20 +14,11 @@ find_package(Threads REQUIRED)
 add_executable(game_server
 	src/main.cpp
 	src/http_server.cpp
-	src/http_server.hpp
-	src/util/sdk.hpp
-	src/model.hpp
 	src/model.cpp
-	src/util/error.hpp
 	src/util/error.cpp
-	src/util/filesystem.hpp
 	src/util/filesystem.cpp
-	src/util/mime_type.hpp
 	src/util/mime_type.cpp
-	src/util/tagged.hpp
-	src/json_loader.hpp
 	src/json_loader.cpp
 	src/request_handler.cpp
-	src/request_handler.hpp
 )
 target_link_libraries(game_server PRIVATE Threads::Threads ${Boost_LIBRARIES})
