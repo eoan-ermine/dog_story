@@ -20,6 +20,8 @@ add_executable(game_server
 	src/model.cpp
 	src/util/error.hpp
 	src/util/error.cpp
+	src/util/filesystem.hpp
+	src/util/filesystem.cpp
 	src/util/tagged.hpp
 	src/json_loader.hpp
 	src/json_loader.cpp

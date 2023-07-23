@@ -1,31 +1,48 @@
 #pragma once
 
+#include <algorithm>
 #include <boost/json.hpp>
+#include <cctype>
+#include <unordered_map>
 
 #include "http_server.hpp"
 #include "model.hpp"
 #include "util/error.hpp"
+#include "util/filesystem.hpp"
 
 namespace request_handler {
 
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace json = boost::json;
+namespace fs = std::filesystem;
 
 using namespace std::literals;
 
 using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>;
+using FileResponse = http::response<http::file_body>;
 
-// Создаёт StringResponse с заданными параметрами
+// Создает text response
+StringResponse MakeTextResponse(http::status status, std::string_view body);
+
+// Создаёт json response
 StringResponse MakeJsonResponse(http::status status, std::string_view body);
 
-void FinalizeJsonResponse(StringResponse &response, unsigned http_version, bool keep_alive);
+// Создает file response
+FileResponse MakeFileResponse(http::status status, std::string_view mime_type, std::string_view filepath,
+                              boost::system::error_code &ec);
+
+template <typename Body>
+void FinalizeResponse(http::response<Body> &response, unsigned http_version, bool keep_alive) {
+    response.version(http_version);
+    response.keep_alive(keep_alive);
+}
 
 class RequestHandler {
   public:
-    explicit RequestHandler(model::Game &game) : game_{game} {}
+    explicit RequestHandler(model::Game &game, std::string_view static_path) : game_{game}, base_path_(static_path) {}
 
     RequestHandler(const RequestHandler &) = delete;
     RequestHandler &operator=(const RequestHandler &) = delete;
@@ -43,10 +60,37 @@ class RequestHandler {
             auto map_id = model::Map::Id{std::string{id}};
             response = get_map(map_id);
         } else if (target.starts_with("/api/"sv)) {
-            response = bad_request();
+            response = json_response(http::status::bad_request,
+                                     json::value_from(util::Error{"badRequest"sv, "Bad request"sv}));
+        } else {
+            auto path = GetPath(target, base_path_);
+            if (ValidatePath(path, base_path_)) {
+                auto extension = path.extension().string();
+                std::transform(extension.begin(), extension.end(), extension.begin(),
+                               [](unsigned char c) { return std::tolower(c); });
+
+                std::string_view mime_type;
+                if (mime_types_.contains(extension)) {
+                    mime_type = mime_types_.at(extension);
+                } else {
+                    mime_type = "application/octet-stream"sv;
+                }
+
+                boost::system::error_code ec;
+                auto file_response = MakeFileResponse(http::status::ok, mime_type, path.string(), ec);
+                if (!ec) {
+                    FinalizeResponse(file_response, request.version(), request.keep_alive());
+                    send(file_response);
+                    return;
+                } else {
+                    response = MakeTextResponse(http::status::not_found, "File not found");
+                }
+            } else {
+                response = MakeTextResponse(http::status::bad_request, "Invalid path");
+            }
         }
 
-        FinalizeJsonResponse(response, request.version(), request.keep_alive());
+        FinalizeResponse(response, request.version(), request.keep_alive());
         send(response);
     }
 
@@ -71,12 +115,19 @@ class RequestHandler {
             return json_response(http::status::ok, json::value_from(*map_ptr));
     }
 
-    // Bad request response
-    StringResponse bad_request() const {
-        return json_response(http::status::bad_request, json::value_from(util::Error{"badRequest"sv, "Bad request"sv}));
-    }
-
     model::Game &game_;
+    fs::path base_path_;
+    std::unordered_map<std::string_view, std::string_view> mime_types_ = {
+        {".htm", "text/html"},       {".html", "text/html"},
+        {".css", "text/css"},        {".txt", "text/plain"},
+        {".js", "text/javascript"},  {".json", "application/json"},
+        {".xml", "application/xml"}, {".png", "image/png"},
+        {".jpg", "image/jpeg"},      {".jpe", "image/jpeg"},
+        {".jpeg", "image/jpeg"},     {".gif", "image/gif"},
+        {".bmp", "image/bmp"},       {".ico", "image/vnd.microsoft.icon"},
+        {".tiff", "image/tiff"},     {".tif", "image/tiff"},
+        {".svg", "image/svg+xml"},   {".svgz", "image/svg+xml"},
+        {".mp3", "audio/mpeg"}};
 };
 
 } // namespace request_handler
