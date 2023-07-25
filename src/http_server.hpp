@@ -42,6 +42,9 @@ class SessionBase {
                           });
     }
 
+    // tcp_stream содержит внутри себя сокет и добавляет поддержку таймаутов
+    beast::tcp_stream stream_;
+
   public:
     // Запрещаем копирование и присваивание объектов SessionBase и его наследников
     SessionBase(const SessionBase &) = delete;
@@ -58,8 +61,6 @@ class SessionBase {
     virtual void HandleRequest(HttpRequest &&request) = 0;
     virtual std::shared_ptr<SessionBase> GetSharedThis() = 0;
 
-    // tcp_stream содержит внутри себя сокет и добавляет поддержку таймаутов
-    beast::tcp_stream stream_;
     beast::flat_buffer buffer_;
     HttpRequest request_;
 };
@@ -78,7 +79,7 @@ class Session : public SessionBase, public std::enable_shared_from_this<Session<
         // Захватываем умный указатель на текущий объект Session в лямбде,
         // чтобы продлить время жизни сессии до вызова лямбды.
         // Используется generic-лямбда функция, способная принять response произвольного типа
-        request_handler_(std::move(request),
+        request_handler_(stream_.socket().remote_endpoint().address().to_string(), std::move(request),
                          [self = this->shared_from_this()](auto &&response) { self->Write(std::move(response)); });
     }
 

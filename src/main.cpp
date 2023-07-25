@@ -1,7 +1,12 @@
+#include "util/logging.hpp"
 #include "util/sdk.hpp"
+
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/setup/console.hpp>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
+#include <boost/log/core.hpp>
 #include <iostream>
 #include <thread>
 
@@ -10,6 +15,7 @@
 
 using namespace std::literals;
 namespace net = boost::asio;
+namespace logging = boost::log;
 
 namespace {
 
@@ -33,6 +39,11 @@ int main(int argc, const char *argv[]) {
         std::cerr << "Usage: game_server <game-config-json> <static-content-directory>"sv << std::endl;
         return EXIT_FAILURE;
     }
+
+    // 0. Инициализируем логер
+    logging::add_console_log(std::clog, logging::keywords::format = &LogFormatter);
+    logging::add_common_attributes();
+
     try {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(argv[1]);
@@ -55,19 +66,23 @@ int main(int argc, const char *argv[]) {
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");
         constexpr net::ip::port_type port = 8080;
-        http_server::ServeHttp(ioc, {address, port}, [&handler](auto &&req, auto &&send) {
-            handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
+        http_server::ServeHttp(ioc, {address, port}, [&handler](auto &&addr, auto &&req, auto &&send) {
+            handler(std::forward<decltype(addr)>(addr), std::forward<decltype(req)>(req),
+                    std::forward<decltype(send)>(send));
         });
 
-        // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-        std::cout << "Server has started..."sv << std::endl;
-
         // 6. Запускаем обработку асинхронных операций
+        LogStart(address.to_string(), port);
         RunWorkers(std::max(1u, num_threads), [&ioc] { ioc.run(); });
+
+        // Логирование успешного завершения программы
+        LogExit(EXIT_SUCCESS);
 
         return EXIT_SUCCESS;
     } catch (const std::exception &ex) {
-        std::cerr << ex.what() << std::endl;
+        // Логирование завершения программы с ошибкой
+        LogExit(EXIT_FAILURE, ex.what());
+
         return EXIT_FAILURE;
     }
 }

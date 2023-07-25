@@ -1,13 +1,12 @@
 #include "http_server.hpp"
+#include "util/logging.hpp"
 
 #include <boost/asio/dispatch.hpp>
 #include <iostream>
 
 namespace http_server {
 
-void ReportError(beast::error_code ec, std::string_view what) {
-    std::cerr << what << ": "sv << ec.message() << std::endl;
-}
+void ReportError(beast::error_code ec, std::string_view what) { LogError(ec.value(), ec.message(), what); }
 
 void SessionBase::Read() {
     using namespace std::literals;

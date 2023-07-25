@@ -3,12 +3,14 @@
 #include <algorithm>
 #include <boost/json.hpp>
 #include <cctype>
+#include <chrono>
 #include <unordered_map>
 
 #include "http_server.hpp"
 #include "model.hpp"
 #include "util/error.hpp"
 #include "util/filesystem.hpp"
+#include "util/logging.hpp"
 #include "util/mime_type.hpp"
 #include "util/response.hpp"
 
@@ -41,8 +43,13 @@ class RequestHandler {
     RequestHandler &operator=(const RequestHandler &) = delete;
 
     template <typename Body, typename Allocator, typename Send>
-    void operator()(http::request<Body, http::basic_fields<Allocator>> &&request, Send &&send) const {
+    void operator()(std::string_view address, http::request<Body, http::basic_fields<Allocator>> &&request,
+                    Send &&send) const {
         auto target = request.target();
+
+        LogRequest(address, target, request.method_string());
+        auto start_ts = std::chrono::system_clock::now();
+
         std::string_view endpoint = "/api/v1/maps";
         Response response;
 
@@ -57,6 +64,10 @@ class RequestHandler {
         } else {
             response = get_file(target);
         }
+
+        auto end_ts = std::chrono::system_clock::now();
+        LogResponse(std::chrono::duration_cast<std::chrono::milliseconds>(end_ts - start_ts).count(), response.code(),
+                    response.content_type());
 
         response.finalize(request.version(), request.keep_alive());
         response.send(send);
