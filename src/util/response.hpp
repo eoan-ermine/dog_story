@@ -9,21 +9,6 @@ namespace http = beast::http;
 using StringResponse = http::response<http::string_body>;
 using FileResponse = http::response<http::file_body>;
 
-#define FOR_RESPONSE(response, action)                                                                                 \
-    {                                                                                                                  \
-        std::visit(                                                                                                    \
-            [&](auto &&arg) {                                                                                          \
-                using T = std::decay_t<decltype(arg)>;                                                                 \
-                if constexpr (std::is_same_v<T, StringResponse>) {                                                     \
-                    action                                                                                             \
-                } else if constexpr (std::is_same_v<T, FileResponse>) {                                                \
-                    action                                                                                             \
-                }                                                                                                      \
-            },                                                                                                         \
-            response);                                                                                                 \
-    }                                                                                                                  \
-    while (0)
-
 template <typename Body>
 void FinalizeResponse(http::response<Body> &response, unsigned http_version, bool keep_alive) {
     response.version(http_version);
@@ -44,25 +29,31 @@ class Response {
 
     int code() const {
         int code;
-        FOR_RESPONSE(response, { code = arg.result_int(); });
+        std::visit([&](auto &&arg) {
+            code = arg.result_int();
+        }, response);
         return code;
     }
 
     std::string_view content_type() const {
         std::string_view content_type;
-        FOR_RESPONSE(response, {
+        std::visit([&](auto &&arg) {
             content_type = arg.count(http::field::content_type) ? arg[http::field::content_type] : "null";
-        });
+        }, response);
         return content_type;
     }
 
     void finalize(unsigned http_version, bool keep_alive) {
-        FOR_RESPONSE(response, { FinalizeResponse(arg, http_version, keep_alive); });
+        std::visit([&](auto &&arg) {
+            FinalizeResponse(arg, http_version, keep_alive);
+        }, response);
     }
 
     template <typename Send>
     void send(Send &&send) {
-        FOR_RESPONSE(response, { send(arg); });
+        std::visit([&](auto &&arg) {
+            send(arg);
+        }, response);
     }
 
   private:
