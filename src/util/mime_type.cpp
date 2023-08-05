@@ -1,6 +1,6 @@
 #include "mime_type.hpp"
 
-#include <boost/beast/core.hpp>
+#include <boost/beast/core/string.hpp>
 
 namespace util {
 

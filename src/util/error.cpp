@@ -1,7 +1,5 @@
 #include "error.hpp"
 
-#include <boost/json.hpp>
-
 namespace util {
 
 using namespace std::literals;

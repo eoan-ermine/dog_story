@@ -1,8 +1,7 @@
 #pragma once
 
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
-#include <string_view>
+#include <boost/log/core/record_view.hpp>
+#include <boost/log/utility/formatting_ostream_fwd.hpp>
 
 namespace util {
 
