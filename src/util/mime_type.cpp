@@ -2,6 +2,8 @@
 
 #include <boost/beast/core.hpp>
 
+namespace util {
+
 // Return a reasonable mime type based on the extension of a file.
 std::string_view GetMimeType(std::string_view path) {
     using boost::beast::iequals;
@@ -49,3 +51,5 @@ std::string_view GetMimeType(std::string_view path) {
         return "image/svg+xml";
     return "application/octet-stream";
 }
+
+} // namespace util

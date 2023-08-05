@@ -12,6 +12,8 @@ namespace json = boost::json;
 BOOST_LOG_ATTRIBUTE_KEYWORD(additional_data, "AdditionalData", boost::json::value)
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
 
+namespace util {
+
 void LogFormatter(const logging::record_view &rec, logging::formatting_ostream &stream) {
     json::value value = {{"timestamp", to_iso_extended_string(*rec[timestamp])},
                          {"message", *rec[logging::expressions::smessage]},
@@ -48,3 +50,5 @@ void LogError(int code, std::string_view text, std::string_view where) {
     boost::json::value custom_data{{"code", code}, {"text", text}, {"where", where}};
     BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, custom_data) << "error";
 }
+
+} // namespace util

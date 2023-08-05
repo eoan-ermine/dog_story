@@ -5,6 +5,8 @@
 
 namespace api_handler {
 
+using namespace util;
+
 class APIHandler {
   public:
     APIHandler(model::Game &game) : game_(game) {}

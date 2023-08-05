@@ -6,6 +6,8 @@
 
 namespace http_server {
 
+using namespace util;
+
 void ReportError(beast::error_code ec, std::string_view what) { LogError(ec.value(), ec.message(), what); }
 
 void SessionBase::Read() {

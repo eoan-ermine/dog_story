@@ -3,15 +3,14 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <filesystem>
 #include <unordered_map>
 
 #include "api_handler.hpp"
 #include "http_server.hpp"
 #include "model.hpp"
 #include "util/error.hpp"
-#include "util/filesystem.hpp"
 #include "util/logging.hpp"
-#include "util/mime_type.hpp"
 #include "util/response.hpp"
 
 namespace request_handler {
@@ -21,6 +20,7 @@ namespace http = beast::http;
 namespace fs = std::filesystem;
 
 using namespace std::literals;
+using namespace util;
 
 using StringRequest = http::request<http::string_body>;
 
@@ -54,23 +54,7 @@ class RequestHandler {
 
   private:
     // Handle static files requests
-    Response get_file(std::string_view target) const {
-        Response response;
-
-        auto path = GetPath(target, base_path_);
-        if (ValidatePath(path, base_path_)) {
-            auto extension = path.extension().string();
-
-            boost::system::error_code ec;
-            response = Response::File(http::status::ok, GetMimeType(extension), path.string(), ec);
-            if (ec)
-                response = Response::Text(http::status::not_found, "File not found");
-        } else {
-            response = Response::Text(http::status::bad_request, "Invalid path");
-        }
-
-        return response;
-    }
+    Response get_file(std::string_view target) const;
 
     api_handler::APIHandler api_;
     fs::path base_path_;

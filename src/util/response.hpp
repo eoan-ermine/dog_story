@@ -3,8 +3,9 @@
 #include <boost/beast/http.hpp>
 #include <boost/json.hpp>
 
-#include <type_traits>
 #include <variant>
+
+namespace util {
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -17,76 +18,18 @@ class Response {
   public:
     Response() {}
 
-    static Response Text(http::status status, std::string_view body) {
-        StringResponse response;
-        response.result(status);
-        response.set(http::field::content_type, "text/plain");
-        response.body() = body;
-        response.content_length(body.size());
-
-        Response result;
-        result = std::move(response);
-        return result;
-    }
-
-    static Response Json(http::status status, const json::value &value) {
-        StringResponse response;
-        response.result(status);
-        response.set(http::field::content_type, "application/json");
-        response.body() = json::serialize(value);
-        response.content_length(response.body().size());
-
-        Response result;
-        result = std::move(response);
-        return result;
-    }
-
+    static Response Text(http::status status, std::string_view body);
+    static Response Json(http::status status, const json::value &value);
     static Response File(http::status status, std::string_view mime_type, std::string_view filepath,
-                         boost::system::error_code &ec) {
-        FileResponse response;
-        response.result(status);
-        response.set(http::field::content_type, mime_type);
+                         boost::system::error_code &ec);
 
-        http::file_body::value_type file;
-        file.open(filepath.data(), beast::file_mode::read, ec);
-        if (!ec) {
-            response.body() = std::move(file);
-            response.prepare_payload();
-        }
+    Response &operator=(StringResponse &&response_);
+    Response &operator=(FileResponse &&response_);
 
-        Response result;
-        result = std::move(response);
-        return result;
-    }
+    int code() const;
+    std::string_view content_type() const;
 
-    Response &operator=(StringResponse &&response_) {
-        response = std::move(response_);
-        return *this;
-    }
-    Response &operator=(FileResponse &&response_) {
-        response = std::move(response_);
-        return *this;
-    }
-
-    int code() const {
-        int code;
-        std::visit([&](auto &&arg) { code = arg.result_int(); }, response);
-        return code;
-    }
-
-    std::string_view content_type() const {
-        std::string_view content_type;
-        std::visit(
-            [&](auto &&arg) {
-                content_type = arg.count(http::field::content_type) ? arg[http::field::content_type] : "null";
-            },
-            response);
-        return content_type;
-    }
-
-    void finalize(unsigned http_version, bool keep_alive) {
-        std::visit([&](auto &&arg) { FinalizeResponse(arg, http_version, keep_alive); }, response);
-    }
+    void finalize(unsigned http_version, bool keep_alive);
 
     template <typename Send>
     void send(Send &&send) {
@@ -102,3 +45,5 @@ class Response {
 
     std::variant<StringResponse, FileResponse> response;
 };
+
+} // namespace util

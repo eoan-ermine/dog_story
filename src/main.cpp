@@ -14,6 +14,8 @@
 #include "request_handler.hpp"
 
 using namespace std::literals;
+using namespace util;
+
 namespace net = boost::asio;
 namespace logging = boost::log;
 
