@@ -2,6 +2,9 @@
 
 #include <boost/json.hpp>
 
+#include <memory>
+#include <mutex>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -151,6 +154,90 @@ class Map {
 void tag_invoke(value_from_tag, value &value, const Map &map);
 // Deserialize json value to map structure
 Map tag_invoke(value_to_tag<Map>, const value &value);
+
+class Dog {
+  public:
+    // TODO...
+  private:
+    std::size_t id_;
+};
+
+// Deserialize json value to dog structure
+Dog tag_invoke(value_to_tag<Dog>, const value &value);
+// Serialize dog to json value
+void tag_invoke(value_from_tag, value &value, const Dog &dog);
+
+class GameSession {
+  public:
+    GameSession(const std::shared_ptr<Map> &map) : map_(map) {}
+
+  private:
+    std::mutex mutex_;
+    std::unordered_map<std::size_t, Dog> dogs_;
+    std::shared_ptr<Map> map_;
+};
+
+// Deserialize json value to game session structure
+GameSession tag_invoke(value_to_tag<GameSession>, const value &value);
+// Serialize game session to json value
+void tag_invoke(value_from_tag, value &value, const GameSession &session);
+
+namespace detail {
+
+struct TokenTag {};
+
+} // namespace detail
+
+using Token = util::Tagged<std::string, detail::TokenTag>;
+
+class Player {
+  public:
+    // TODO,,,
+  private:
+    std::shared_ptr<GameSession> session_;
+    std::shared_ptr<Dog> dog_;
+};
+
+// Deserialize json value to player structure
+Player tag_invoke(value_to_tag<Player>, const value &value);
+// Serialize player to json value
+void tag_invoke(value_from_tag, value &value, const Player &player);
+
+class PlayerTokens {
+  public:
+    std::shared_ptr<Player> FindPlayerByToken(Token token) {
+        // TODO...
+    }
+
+    Token AddPlayer(Player &player) {
+        // TODO...
+    }
+
+  private:
+    std::random_device random_device_;
+    std::mt19937_64 generator1_{[this] {
+        std::uniform_int_distribution<std::mt19937_64::result_type> dist;
+        return dist(random_device_);
+    }()};
+    std::mt19937_64 generator2_{[this] {
+        std::uniform_int_distribution<std::mt19937_64::result_type> dist;
+        return dist(random_device_);
+    }()};
+};
+
+class Players {
+  public:
+    Player &Add(Dog &dog, GameSession &session) {
+        // TODO...
+    }
+
+    std::shared_ptr<Player> FindByDogIdAndMapId(std::size_t dog_id, std::size_t map_id) {
+        // TODO...
+    }
+
+  private:
+    // TODO...
+};
 
 class Game {
   public:
