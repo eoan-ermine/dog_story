@@ -34,3 +34,4 @@
 # Build artifacts
 CMakeUserPresets.json
 build
+.cache
