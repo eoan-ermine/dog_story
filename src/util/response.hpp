@@ -1,3 +1,5 @@
+#pragma once
+
 #include <boost/beast/http.hpp>
 #include <boost/json.hpp>
 
