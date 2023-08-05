@@ -1,11 +1,13 @@
 #include "mime_type.hpp"
 
+#include <boost/beast/core.hpp>
+
 // Return a reasonable mime type based on the extension of a file.
 std::string_view GetMimeType(std::string_view path) {
-    using beast::iequals;
+    using boost::beast::iequals;
     auto const ext = [&path] {
         auto const pos = path.rfind(".");
-        if (pos == beast::string_view::npos)
+        if (pos == std::string_view::npos)
             return std::string_view{};
         return path.substr(pos);
     }();
