@@ -20,6 +20,5 @@ add_executable(game_server
 	src/util/logging.cpp
 	src/util/mime_type.cpp
 	src/json_loader.cpp
-	src/request_handler.cpp
 )
 target_link_libraries(game_server PRIVATE Threads::Threads ${Boost_LIBRARIES})
