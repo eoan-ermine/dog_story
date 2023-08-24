@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 project(game_server CXX)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 find_package(Boost 1.81.0 REQUIRED COMPONENTS json log)
 if(Boost_FOUND)
