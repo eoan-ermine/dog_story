@@ -2,9 +2,11 @@
 
 #include <boost/json.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <mutex>
 #include <random>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -164,8 +166,11 @@ enum class Direction {
 
 class Dog {
   public:
+    using Id = util::Tagged<std::size_t, Dog>;
+
     static Dog Create(const Map &map) {
         // Координаты пса — случайно выбранная точка на случайно выбранном отрезке дороги этой карты
+        static std::size_t last_id = 0;
 
         const auto &roads = map.GetRoads();
         std::mt19937_64 generator{[] {
@@ -187,14 +192,23 @@ class Dog {
             }
         }());
 
-        return Dog(position);
+        return Dog(Id{last_id++}, position);
     }
+
+    Id GetId() const { return id_; }
+
+    std::pair<double, double> GetPosition() const { return position_; }
+
+    std::pair<double, double> GetSpeed() const { return speed_; }
+
+    Direction GetDirection() const { return direction_; }
 
   private:
     // После добавления на карту пёс должен иметь скорость, равную нулю. Направление пса по умолчанию — на север.
-    Dog(std::pair<double, double> position) : position_(position), speed_({0.0, 0.0}), direction_(Direction::NORTH) {}
+    Dog(Id id, std::pair<double, double> position)
+        : id_(id), position_(position), speed_({0.0, 0.0}), direction_(Direction::NORTH) {}
 
-    std::size_t id_;
+    Id id_;
     // Координаты пса на карте задаются двумя вещественными числами. Для описания вещественных координат разработайте
     // структуру или класс.
     std::pair<double, double> position_;
@@ -213,12 +227,19 @@ void tag_invoke(value_from_tag, value &value, const Dog &dog);
 
 class GameSession {
   public:
+    using Dogs = std::unordered_map<Dog::Id, std::shared_ptr<Dog>, util::TaggedHasher<Dog::Id>>;
+
     GameSession(const std::shared_ptr<Map> &map) : map_(map) {}
 
+    void AddDog(std::shared_ptr<Dog> dog) { dogs_.insert({dog->GetId(), std::move(dog)}); }
+
+    const Dogs &GetDogs() const { return dogs_; }
+
+    std::shared_ptr<Map> GetMap() const { return map_; }
+
   private:
-    std::mutex mutex_;
-    std::unordered_map<std::size_t, Dog> dogs_;
-    std::shared_ptr<Map> map_;
+    Dogs dogs_;
+    const std::shared_ptr<Map> &map_;
 };
 
 // Deserialize json value to game session structure
@@ -236,7 +257,10 @@ using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class Player {
   public:
-    // TODO,,,
+    Player(std::shared_ptr<GameSession> session, std::shared_ptr<Dog> dog) : session_(session), dog_(dog) {
+        session->AddDog(dog);
+    }
+
   private:
     std::shared_ptr<GameSession> session_;
     std::shared_ptr<Dog> dog_;
@@ -249,12 +273,16 @@ void tag_invoke(value_from_tag, value &value, const Player &player);
 
 class PlayerTokens {
   public:
-    std::shared_ptr<Player> FindPlayerByToken(Token token) {
-        // TODO...
-    }
+    std::shared_ptr<Player> FindPlayerByToken(Token token) { return token_to_player_[token]; }
 
-    Token AddPlayer(Player &player) {
-        // TODO...
+    Token AddPlayer(std::shared_ptr<Player> player) {
+        std::stringstream stream;
+        stream << std::hex << generator1_() << generator2_();
+
+        Token token(stream.str());
+        token_to_player_.insert({token, player});
+
+        return token;
     }
 
   private:
@@ -267,20 +295,29 @@ class PlayerTokens {
         std::uniform_int_distribution<std::mt19937_64::result_type> dist;
         return dist(random_device_);
     }()};
+
+    std::unordered_map<Token, std::shared_ptr<Player>> token_to_player_;
 };
 
 class Players {
   public:
-    Player &Add(Dog &dog, GameSession &session) {
-        // TODO...
+    Player &Add(std::shared_ptr<Dog> dog, std::shared_ptr<GameSession> session) {
+        auto player = std::make_shared<Player>(session, dog);
+
+        std::pair<Dog::Id, std::shared_ptr<Player>> identity{dog->GetId(), player};
+
+        players_[session->GetMap()->GetId()][dog->GetId()] = player;
+        return *player;
     }
 
-    std::shared_ptr<Player> FindByDogIdAndMapId(std::size_t dog_id, std::size_t map_id) {
-        // TODO...
+    std::shared_ptr<Player> FindByDogIdAndMapId(Dog::Id dog_id, Map::Id map_id) const {
+        return players_.at(map_id).at(dog_id);
     }
 
   private:
-    // TODO...
+    std::unordered_map<Map::Id, std::unordered_map<Dog::Id, std::shared_ptr<Player>, util::TaggedHasher<Dog::Id>>,
+                       util::TaggedHasher<Map::Id>>
+        players_;
 };
 
 class Game {
