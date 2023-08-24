@@ -4,10 +4,10 @@
 
 #include <cstddef>
 #include <memory>
-#include <mutex>
 #include <random>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -257,11 +257,21 @@ using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class Player {
   public:
-    Player(std::shared_ptr<GameSession> session, std::shared_ptr<Dog> dog) : session_(session), dog_(dog) {
+    Player(std::string name, std::shared_ptr<GameSession> session, std::shared_ptr<Dog> dog)
+        : name_(std::move(name)), session_(session), dog_(dog) {
         session->AddDog(dog);
     }
 
+    Dog::Id GetId() const { return dog_->GetId(); }
+
+    std::string_view GetName() const { return name_; }
+
+    std::shared_ptr<GameSession> GetSession() const { return session_; }
+
+    std::shared_ptr<Dog> GetDog() const { return dog_; }
+
   private:
+    std::string name_;
     std::shared_ptr<GameSession> session_;
     std::shared_ptr<Dog> dog_;
 };
