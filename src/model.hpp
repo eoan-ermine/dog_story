@@ -155,11 +155,55 @@ void tag_invoke(value_from_tag, value &value, const Map &map);
 // Deserialize json value to map structure
 Map tag_invoke(value_to_tag<Map>, const value &value);
 
+enum class Direction {
+    NORTH, // Север
+    SOUTH, // Юг
+    WEST,  // Запад
+    EAST   // Восток
+};
+
 class Dog {
   public:
-    // TODO...
+    static Dog Create(const Map &map) {
+        // Координаты пса — случайно выбранная точка на случайно выбранном отрезке дороги этой карты
+
+        const auto &roads = map.GetRoads();
+        std::mt19937_64 generator{[] {
+            std::random_device random_device;
+            std::uniform_int_distribution<std::mt19937_64::result_type> dist;
+            return dist(random_device);
+        }()};
+
+        std::pair<double, double> position([&]() -> std::pair<double, double> {
+            std::uniform_int_distribution<int> uniform_dist(0, roads.size() - 1);
+            const auto &road = roads[uniform_dist(generator)];
+            auto start = road.GetStart(), end = road.GetEnd();
+            if (road.IsVertical()) {
+                std::uniform_int_distribution<int> uniform_dist(start.y, end.y);
+                return {start.x, uniform_dist(generator)};
+            } else if (road.IsHorizontal()) {
+                std::uniform_int_distribution<int> uniform_dist(start.x, end.x);
+                return {uniform_dist(generator), start.y};
+            }
+        }());
+
+        return Dog(position);
+    }
+
   private:
+    // После добавления на карту пёс должен иметь скорость, равную нулю. Направление пса по умолчанию — на север.
+    Dog(std::pair<double, double> position) : position_(position), speed_({0.0, 0.0}), direction_(Direction::NORTH) {}
+
     std::size_t id_;
+    // Координаты пса на карте задаются двумя вещественными числами. Для описания вещественных координат разработайте
+    // структуру или класс.
+    std::pair<double, double> position_;
+    // Скорость пса на карте задаётся также двумя вещественными числами. Скорость измеряется в единицах карты за одну
+    // секунду
+    std::pair<double, double> speed_;
+    // Направление в пространстве принимает одно из четырех значений: NORTH (север), SOUTH (юг), WEST (запад), EAST
+    // (восток).
+    Direction direction_;
 };
 
 // Deserialize json value to dog structure
