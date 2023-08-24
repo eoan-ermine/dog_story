@@ -164,11 +164,12 @@ enum class Direction {
     EAST   // Восток
 };
 
+// Пес — персонаж, которым управляет игрок.
 class Dog {
   public:
     using Id = util::Tagged<std::size_t, Dog>;
 
-    static Dog Create(const Map &map) {
+    static std::shared_ptr<Dog> Create(std::string name, const Map &map) {
         // Координаты пса — случайно выбранная точка на случайно выбранном отрезке дороги этой карты
         static std::size_t last_id = 0;
 
@@ -192,10 +193,12 @@ class Dog {
             }
         }());
 
-        return Dog(Id{last_id++}, position);
+        return std::shared_ptr<Dog>(new Dog(Id{last_id++}, name, position));
     }
 
     Id GetId() const { return id_; }
+
+    std::string_view GetName() const { return name_; }
 
     std::pair<double, double> GetPosition() const { return position_; }
 
@@ -205,10 +208,11 @@ class Dog {
 
   private:
     // После добавления на карту пёс должен иметь скорость, равную нулю. Направление пса по умолчанию — на север.
-    Dog(Id id, std::pair<double, double> position)
-        : id_(id), position_(position), speed_({0.0, 0.0}), direction_(Direction::NORTH) {}
+    Dog(Id id, std::string name, std::pair<double, double> position)
+        : id_(id), name_(std::move(name)), position_(position), speed_({0.0, 0.0}), direction_(Direction::NORTH) {}
 
     Id id_;
+    std::string name_;
     // Координаты пса на карте задаются двумя вещественными числами. Для описания вещественных координат разработайте
     // структуру или класс.
     std::pair<double, double> position_;
@@ -239,7 +243,7 @@ class GameSession {
 
   private:
     Dogs dogs_;
-    const std::shared_ptr<Map> &map_;
+    std::shared_ptr<Map> map_;
 };
 
 // Deserialize json value to game session structure
@@ -257,21 +261,20 @@ using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class Player {
   public:
-    Player(std::string name, std::shared_ptr<GameSession> session, std::shared_ptr<Dog> dog)
-        : name_(std::move(name)), session_(session), dog_(dog) {
-        session->AddDog(dog);
+    Player(std::string name, std::shared_ptr<GameSession> session) : session_(session) {
+        dog_ = Dog::Create(name, *session->GetMap());
+        session->AddDog(dog_);
     }
 
     Dog::Id GetId() const { return dog_->GetId(); }
 
-    std::string_view GetName() const { return name_; }
+    std::string_view GetName() const { return dog_->GetName(); }
 
     std::shared_ptr<GameSession> GetSession() const { return session_; }
 
     std::shared_ptr<Dog> GetDog() const { return dog_; }
 
   private:
-    std::string name_;
     std::shared_ptr<GameSession> session_;
     std::shared_ptr<Dog> dog_;
 };
@@ -306,15 +309,14 @@ class PlayerTokens {
         return dist(random_device_);
     }()};
 
-    std::unordered_map<Token, std::shared_ptr<Player>> token_to_player_;
+    std::unordered_map<Token, std::shared_ptr<Player>, util::TaggedHasher<Token>> token_to_player_;
 };
 
 class Players {
   public:
-    Player &Add(std::shared_ptr<Dog> dog, std::shared_ptr<GameSession> session) {
-        auto player = std::make_shared<Player>(session, dog);
-
-        std::pair<Dog::Id, std::shared_ptr<Player>> identity{dog->GetId(), player};
+    Player &Add(std::string name, std::shared_ptr<GameSession> session) {
+        auto player = std::make_shared<Player>(name, session);
+        const auto &dog = player->GetDog();
 
         players_[session->GetMap()->GetId()][dog->GetId()] = player;
         return *player;
@@ -357,6 +359,7 @@ class Game {
 
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
+    std::vector<GameSession> sessions_;
 };
 
 // Deserialize json value to game structure
