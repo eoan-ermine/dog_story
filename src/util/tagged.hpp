@@ -48,13 +48,13 @@ class Tagged {
     Value value_;
 };
 
+} // namespace util
+
 // Хешер для Tagged-типа, чтобы Tagged-объекты можно было хранить в unordered-контейнерах
-template <typename TaggedValue>
-struct TaggedHasher {
-    std::size_t operator()(const TaggedValue &value) const {
+template <typename Value, typename Tag>
+struct std::hash<util::Tagged<Value, Tag>> {
+    std::size_t operator()(const util::Tagged<Value, Tag> &value) const {
         // Возвращает хеш значения, хранящегося внутри value
-        return std::hash<typename TaggedValue::ValueType>{}(*value);
+        return std::hash<Value>{}(*value);
     }
 };
-
-} // namespace util

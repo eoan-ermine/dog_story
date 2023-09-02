@@ -139,7 +139,7 @@ class Map {
     const Offices &GetOffices() const noexcept { return offices_; }
 
   private:
-    using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
+    using OfficeIdToIndex = std::unordered_map<Office::Id, size_t>;
 
     void AddOffice(Office &&office);
 
@@ -231,7 +231,7 @@ void tag_invoke(value_from_tag, value &value, const Dog &dog);
 
 class GameSession {
   public:
-    using Dogs = std::unordered_map<Dog::Id, std::shared_ptr<Dog>, util::TaggedHasher<Dog::Id>>;
+    using Dogs = std::unordered_map<Dog::Id, std::shared_ptr<Dog>>;
 
     GameSession(const std::shared_ptr<Map> &map) : map_(map) {}
 
@@ -309,7 +309,7 @@ class PlayerTokens {
         return dist(random_device_);
     }()};
 
-    std::unordered_map<Token, std::shared_ptr<Player>, util::TaggedHasher<Token>> token_to_player_;
+    std::unordered_map<Token, std::shared_ptr<Player>> token_to_player_;
 };
 
 class Players {
@@ -327,9 +327,7 @@ class Players {
     }
 
   private:
-    std::unordered_map<Map::Id, std::unordered_map<Dog::Id, std::shared_ptr<Player>, util::TaggedHasher<Dog::Id>>,
-                       util::TaggedHasher<Map::Id>>
-        players_;
+    std::unordered_map<Map::Id, std::unordered_map<Dog::Id, std::shared_ptr<Player>>> players_;
 };
 
 class Game {
@@ -352,8 +350,7 @@ class Game {
     }
 
   private:
-    using MapIdHasher = util::TaggedHasher<Map::Id>;
-    using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
+    using MapIdToIndex = std::unordered_map<Map::Id, size_t>;
 
     void AddMap(Map &&map);
 
