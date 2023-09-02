@@ -69,6 +69,10 @@ std::string_view Response::content_type() const {
     return content_type;
 }
 
+void Response::set(std::string_view name, std::string_view value) {
+    std::visit([&](auto &&arg) { arg.set(name, value); }, response);
+}
+
 void Response::finalize(unsigned http_version, bool keep_alive) {
     std::visit([&](auto &&arg) { FinalizeResponse(arg, http_version, keep_alive); }, response);
 }

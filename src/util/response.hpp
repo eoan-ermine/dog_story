@@ -3,6 +3,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/json.hpp>
 
+#include <string_view>
 #include <variant>
 
 namespace util {
@@ -28,6 +29,7 @@ class Response {
 
     int code() const;
     std::string_view content_type() const;
+    void set(std::string_view name, std::string_view value);
 
     void finalize(unsigned http_version, bool keep_alive);
 
