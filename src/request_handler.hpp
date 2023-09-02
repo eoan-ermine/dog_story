@@ -40,7 +40,7 @@ class RequestHandler {
         auto start_ts = std::chrono::system_clock::now();
 
         Response response;
-        if (!api_.dispatch(response, target)) {
+        if (!api_.dispatch(response, request.method(), target, request.body())) {
             response = get_file(target);
         }
 

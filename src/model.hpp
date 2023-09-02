@@ -384,4 +384,20 @@ Game tag_invoke(value_to_tag<Game>, const value &value);
 // Serialize maps to json value
 void tag_invoke(value_from_tag, value &value, const Game::Maps &maps);
 
+struct JoinRequest {
+    std::string userName;
+    Map::Id::ValueType mapId;
+};
+
+// Deserialize json value to join request
+JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value);
+
+struct JoinResponse {
+    Token authToken;
+    Player::Id playerId;
+};
+
+// Serialize join response to json value
+void tag_invoke(value_from_tag, value &value, const JoinResponse &response);
+
 } // namespace model
