@@ -261,12 +261,14 @@ using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class Player {
   public:
+    using Id = Dog::Id;
+
     Player(std::string name, std::shared_ptr<GameSession> session) : session_(session) {
         dog_ = Dog::Create(name, *session->GetMap());
         session->AddDog(dog_);
     }
 
-    Dog::Id GetId() const { return dog_->GetId(); }
+    Id GetId() const { return dog_->GetId(); }
 
     std::string_view GetName() const { return dog_->GetName(); }
 
@@ -314,12 +316,12 @@ class PlayerTokens {
 
 class Players {
   public:
-    Player &Add(std::string name, std::shared_ptr<GameSession> session) {
+    std::shared_ptr<Player> Add(std::string name, std::shared_ptr<GameSession> session) {
         auto player = std::make_shared<Player>(name, session);
         const auto &dog = player->GetDog();
 
         players_[session->GetMap()->GetId()][dog->GetId()] = player;
-        return *player;
+        return player;
     }
 
     std::shared_ptr<Player> FindByDogIdAndMapId(Dog::Id dog_id, Map::Id map_id) const {
@@ -342,11 +344,27 @@ class Game {
 
     const Maps &GetMaps() const noexcept { return maps_; }
 
-    const Map *FindMap(const Map::Id &id) const noexcept {
+    Map *FindMap(const Map::Id &id) noexcept {
         if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {
             return &maps_.at(it->second);
         }
         return nullptr;
+    }
+
+    void AddSession(GameSession &&session) { sessions_.push_back(std::move(session)); }
+
+    GameSession *FindSession(const Map::Id &id) noexcept {
+        auto it = std::find_if(sessions_.begin(), sessions_.end(),
+                               [&](const auto &session) { return id == session.GetMap()->GetId(); });
+        if (it == sessions_.end())
+            return nullptr;
+        return &(*it);
+    }
+
+    std::pair<std::shared_ptr<Player>, Token> AddPlayer(std::string username, std::shared_ptr<GameSession> session) {
+        auto player = players_.Add(std::move(username), std::shared_ptr<model::GameSession>(session));
+        auto token = player_tokens_.AddPlayer(player);
+        return {player, token};
     }
 
   private:
@@ -357,6 +375,8 @@ class Game {
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
     std::vector<GameSession> sessions_;
+    Players players_;
+    PlayerTokens player_tokens_;
 };
 
 // Deserialize json value to game structure
