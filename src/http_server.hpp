@@ -1,11 +1,9 @@
 #pragma once
-#include "util/sdk.hpp"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
-#include <iostream>
 #include <string_view>
 
 // Ядро асинхронного HTTP-сервера будет располагаться в пространстве имён http_server

@@ -2,7 +2,6 @@
 #include "util/logging.hpp"
 
 #include <boost/asio/dispatch.hpp>
-#include <iostream>
 
 namespace http_server {
 

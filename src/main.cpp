@@ -1,3 +1,4 @@
+#include "http_server.hpp"
 #include "util/logging.hpp"
 #include "util/sdk.hpp"
 
