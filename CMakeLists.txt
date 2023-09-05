@@ -14,7 +14,6 @@ find_package(Threads REQUIRED)
 include_directories(src)
 add_executable(game_server
 	src/main.cpp
-	src/api_handler/api_handler.cpp
 	src/http_server.cpp
 	src/model.cpp
 	src/util/error.cpp

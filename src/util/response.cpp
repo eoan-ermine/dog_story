@@ -73,6 +73,16 @@ void Response::set(std::string_view name, std::string_view value) {
     std::visit([&](auto &&arg) { arg.set(name, value); }, response);
 }
 
+Response &&Response::no_cache() && {
+    set("Cache-Control", "no-cache");
+    return std::move(*this);
+};
+
+Response &&Response::allow(std::string_view allowed_methods) && {
+    set("Allow", allowed_methods);
+    return std::move(*this);
+}
+
 void Response::finalize(unsigned http_version, bool keep_alive) {
     std::visit([&](auto &&arg) { FinalizeResponse(arg, http_version, keep_alive); }, response);
 }
