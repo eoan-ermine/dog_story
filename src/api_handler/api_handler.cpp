@@ -23,7 +23,7 @@ Response APIHandler::join(std::string username, model::Map::Id id) {
     if (username.empty()) {
         auto response =
             Response::Json(http::status::bad_request,
-                           json::value_from(util::Error{.code = "invalidArgument", .message = "Invalid meme"}));
+                           json::value_from(util::Error{.code = "invalidArgument", .message = "Invalid username"}));
         response.set("Cache-Control", "no-cache");
         return response;
     }
