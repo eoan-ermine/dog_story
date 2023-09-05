@@ -146,4 +146,13 @@ void tag_invoke(value_from_tag, value &value, const JoinResponse &response) {
     value = {{"authToken", response.authToken}, {"playerId", response.playerId}};
 }
 
+void tag_invoke(value_from_tag, value &value, const GetPlayersResponse &response) {
+    auto &obj = value.as_object();
+
+    for (const auto &[key, value] : response.players) {
+        boost::json::value ident = *value->GetId();
+        obj[ident.as_string()] = {{"name", value->GetName()}};
+    }
+}
+
 } // namespace model

@@ -288,7 +288,12 @@ void tag_invoke(value_from_tag, value &value, const Player &player);
 
 class PlayerTokens {
   public:
-    std::shared_ptr<Player> FindPlayerByToken(Token token) { return token_to_player_[token]; }
+    std::shared_ptr<Player> FindPlayerByToken(Token token) {
+        if (token_to_player_.contains(token)) {
+            return token_to_player_[token];
+        }
+        return nullptr;
+    }
 
     Token AddPlayer(std::shared_ptr<Player> player) {
         std::stringstream stream;
@@ -326,6 +331,10 @@ class Players {
 
     std::shared_ptr<Player> FindByDogIdAndMapId(Dog::Id dog_id, Map::Id map_id) const {
         return players_.at(map_id).at(dog_id);
+    }
+
+    const std::unordered_map<Dog::Id, std::shared_ptr<Player>> &GetPlayers(const Map::Id &map_id) {
+        return players_[map_id];
     }
 
   private:
@@ -367,6 +376,14 @@ class Game {
         return {player, token};
     }
 
+    std::shared_ptr<Player> GetPlayer(std::string token) {
+        return player_tokens_.FindPlayerByToken(Token{std::move(token)});
+    }
+
+    const std::unordered_map<Dog::Id, std::shared_ptr<Player>> &GetPlayers(const Map::Id &map_id) {
+        return players_.GetPlayers(map_id);
+    }
+
   private:
     using MapIdToIndex = std::unordered_map<Map::Id, size_t>;
 
@@ -399,5 +416,12 @@ struct JoinResponse {
 
 // Serialize join response to json value
 void tag_invoke(value_from_tag, value &value, const JoinResponse &response);
+
+struct GetPlayersResponse {
+    const std::unordered_map<Dog::Id, std::shared_ptr<Player>> &players;
+};
+
+// Serialize get players response to json value
+void tag_invoke(value_from_tag, value &value, const GetPlayersResponse &response);
 
 } // namespace model
