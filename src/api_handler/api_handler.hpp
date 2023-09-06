@@ -20,7 +20,7 @@ class APIHandler {
     APIHandler(model::Game &game) : game_(game) {}
 
     template <typename Body, typename Allocator>
-    bool dispatch(http::request<Body, http::basic_fields<Allocator>> &request, Response &response) {
+    bool dispatch(const http::request<Body, http::basic_fields<Allocator>> &request, Response &response) const {
         for (const auto &endpoint : endpoints) {
             if (endpoint->match(request)) {
                 response = endpoint->handle(request);

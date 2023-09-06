@@ -2,6 +2,7 @@
 #include "util/logging.hpp"
 #include "util/sdk.hpp"
 
+#include <boost/asio/strand.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 
@@ -64,7 +65,7 @@ int main(int argc, const char *argv[]) {
         });
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        request_handler::RequestHandler handler{game, argv[2]};
+        request_handler::RequestHandler handler{game, argv[2], net::make_strand(ioc)};
 
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");

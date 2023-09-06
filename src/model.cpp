@@ -143,7 +143,7 @@ JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value) {
 }
 
 void tag_invoke(value_from_tag, value &value, const JoinResponse &response) {
-    value = {{"authToken", response.authToken}, {"playerId", response.playerId}};
+    value = {{"authToken", *response.authToken}, {"playerId", *response.playerId}};
 }
 
 void tag_invoke(value_from_tag, value &value, const GetPlayersResponse &response) {

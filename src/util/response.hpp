@@ -1,8 +1,10 @@
 #pragma once
 
+#include <boost/asio/strand.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/json.hpp>
 
+#include <memory>
 #include <string_view>
 #include <variant>
 
@@ -15,8 +17,10 @@ namespace json = boost::json;
 using StringResponse = http::response<http::string_body>;
 using FileResponse = http::response<http::file_body>;
 
-class Response {
+class Response : public std::enable_shared_from_this<Response> {
   public:
+    using Strand = beast::net::strand<beast::net::io_context::executor_type>;
+
     Response() {}
 
     static Response Text(http::status status, std::string_view body);
@@ -36,8 +40,14 @@ class Response {
     void finalize(unsigned http_version, bool keep_alive);
 
     template <typename Send>
-    void send(Send &&send) {
-        std::visit([&](auto &&arg) { send(arg); }, response);
+    void send(Send &&send_fn) {
+        std::visit([&](auto &&arg) { send_fn(arg); }, response);
+    }
+
+    template <typename Send>
+    void send(Send &&send_fn, Strand api_strand) {
+        auto handle = [self = shared_from_this(), send_fn]() { self->send(send_fn); };
+        boost::beast::net::dispatch(api_strand, handle);
     }
 
   private:
