@@ -18,6 +18,7 @@ add_executable(game_server
 	src/model/domains/map.cpp
 	src/model/domains/game.cpp
 	src/model/domains/api.cpp
+	src/model/domains/basic.cpp
 	src/util/error.cpp
 	src/util/filesystem.cpp
 	src/util/logging.cpp

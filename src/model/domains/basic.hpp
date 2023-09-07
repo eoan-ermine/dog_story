@@ -1,6 +1,10 @@
 #pragma once
 
+#include <boost/json.hpp>
+
 namespace model {
+
+using namespace boost::json;
 
 using Dimension = int;
 using Coord = Dimension;
@@ -23,10 +27,12 @@ struct Offset {
 };
 
 enum class Direction {
-    NORTH = 'N', // Север
-    SOUTH = 'S', // Юг
-    WEST = 'W',  // Запад
-    EAST = 'E'   // Восток
+    NORTH, // Север
+    SOUTH, // Юг
+    WEST,  // Запад
+    EAST   // Восток
 };
+
+std::string_view serialize(Direction direction);
 
 } // namespace model

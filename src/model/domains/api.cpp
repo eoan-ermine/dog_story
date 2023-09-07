@@ -28,8 +28,9 @@ void tag_invoke(value_from_tag, value &value, const GetStateResponse &response) 
     for (const auto &[key, value] : response.players) {
         const auto &dog = value->GetDog();
         boost::json::value ident = *value->GetId();
-        obj[ident.as_string()] = {
-            {"pos", dog->GetPosition()}, {"speed", dog->GetSpeed()}, {"dir", dog->GetDirection()}};
+        auto [x, y] = dog->GetPosition();
+        auto [dx, dy] = dog->GetSpeed();
+        obj[ident.as_string()] = {{"pos", {x, y}}, {"speed", {dx, dy}}, {"dir", serialize(dog->GetDirection())}};
     }
 }
 
