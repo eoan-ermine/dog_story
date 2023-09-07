@@ -28,10 +28,17 @@ struct JoinResponse {
 void tag_invoke(value_from_tag, value &value, const JoinResponse &response);
 
 struct GetPlayersResponse {
-    const std::unordered_map<Dog::Id, std::shared_ptr<Player>> &players;
+    const std::unordered_map<Player::Id, std::shared_ptr<Player>> &players;
 };
 
 // Serialize get players response to json value
 void tag_invoke(value_from_tag, value &value, const GetPlayersResponse &response);
+
+struct GetStateResponse {
+    const std::unordered_map<Player::Id, std::shared_ptr<Player>> &players;
+};
+
+// Serialize get state response to json value
+void tag_invoke(value_from_tag, value &value, const GetStateResponse &response);
 
 } // namespace model

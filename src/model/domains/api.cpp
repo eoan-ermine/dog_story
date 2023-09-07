@@ -21,4 +21,16 @@ void tag_invoke(value_from_tag, value &value, const GetPlayersResponse &response
     }
 }
 
+void tag_invoke(value_from_tag, value &value, const GetStateResponse &response) {
+    auto &obj = value.as_object();
+    obj["players"] = object{};
+
+    for (const auto &[key, value] : response.players) {
+        const auto &dog = value->GetDog();
+        boost::json::value ident = *value->GetId();
+        obj[ident.as_string()] = {
+            {"pos", dog->GetPosition()}, {"speed", dog->GetSpeed()}, {"dir", dog->GetDirection()}};
+    }
+}
+
 } // namespace model

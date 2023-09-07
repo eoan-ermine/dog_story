@@ -23,10 +23,10 @@ struct Offset {
 };
 
 enum class Direction {
-    NORTH, // Север
-    SOUTH, // Юг
-    WEST,  // Запад
-    EAST   // Восток
+    NORTH = 'N', // Север
+    SOUTH = 'S', // Юг
+    WEST = 'W',  // Запад
+    EAST = 'E'   // Восток
 };
 
 } // namespace model
