@@ -1,6 +1,6 @@
 #pragma once
 
-#include "model.hpp"
+#include "model/model.hpp"
 #include "util/response.hpp"
 #include <memory>
 

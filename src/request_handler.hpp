@@ -6,7 +6,7 @@
 #include <filesystem>
 
 #include "api_handler/api_handler.hpp"
-#include "model.hpp"
+#include "model/model.hpp"
 #include "util/logging.hpp"
 #include "util/response.hpp"
 

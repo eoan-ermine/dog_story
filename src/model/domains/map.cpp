@@ -1,12 +1,10 @@
-#include "model.hpp"
-
-#include <stdexcept>
-
-namespace model {
+#include "map.hpp"
 
 using namespace std::literals;
 
 std::string to_string(boost::json::string string) { return {string.begin(), string.end()}; }
+
+namespace model {
 
 void tag_invoke(value_from_tag, value &value, const Road &road) {
     const auto [start_x, start_y] = road.GetStart();
@@ -87,25 +85,6 @@ Map tag_invoke(value_to_tag<Map>, const value &value) {
             value_to<std::vector<Building>>(obj.at("buildings")), value_to<std::vector<Office>>(obj.at("offices"))};
 }
 
-Game tag_invoke(value_to_tag<Game>, const value &value) {
-    const object &obj = value.as_object();
-
-    return Game{value_to<std::vector<Map>>(obj.at("maps"))};
-}
-
-void tag_invoke(value_from_tag, value &value, const Game::Maps &maps) {
-    array maps_array;
-
-    for (const auto &map : maps) {
-        object res_object;
-        res_object["id"sv] = *map.GetId();
-        res_object["name"sv] = map.GetName();
-        maps_array.push_back(res_object);
-    }
-
-    value = maps_array;
-}
-
 void Map::AddOffice(Office &&office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
         throw std::invalid_argument("Duplicate warehouse");
@@ -119,39 +98,6 @@ void Map::AddOffice(Office &&office) {
         // Удаляем офис из вектора, если не удалось вставить в unordered_map
         offices_.pop_back();
         throw;
-    }
-}
-
-void Game::AddMap(Map &&map) {
-    const size_t index = maps_.size();
-    if (auto [it, inserted] = map_id_to_index_.emplace(map.GetId(), index); !inserted) {
-        throw std::invalid_argument("Map with id "s + *map.GetId() + " already exists"s);
-    } else {
-        try {
-            maps_.emplace_back(std::move(map));
-        } catch (...) {
-            map_id_to_index_.erase(it);
-            throw;
-        }
-    }
-}
-
-JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value) {
-    const object &obj = value.as_object();
-    return JoinRequest{.userName = value_to<std::string>(obj.at("userName")),
-                       .mapId = value_to<std::string>(obj.at("mapId"))};
-}
-
-void tag_invoke(value_from_tag, value &value, const JoinResponse &response) {
-    value = {{"authToken", *response.authToken}, {"playerId", *response.playerId}};
-}
-
-void tag_invoke(value_from_tag, value &value, const GetPlayersResponse &response) {
-    auto &obj = value.as_object();
-
-    for (const auto &[key, value] : response.players) {
-        boost::json::value ident = *value->GetId();
-        obj[ident.as_string()] = {{"name", value->GetName()}};
     }
 }
 

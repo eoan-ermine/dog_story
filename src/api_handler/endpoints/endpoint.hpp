@@ -1,6 +1,6 @@
 #pragma once
 
-#include "model.hpp"
+#include "model/model.hpp"
 #include "util/error.hpp"
 #include "util/response.hpp"
 #include <boost/beast/http.hpp>

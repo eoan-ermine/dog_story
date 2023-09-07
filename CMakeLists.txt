@@ -15,7 +15,9 @@ include_directories(src)
 add_executable(game_server
 	src/main.cpp
 	src/http_server.cpp
-	src/model.cpp
+	src/model/domains/map.cpp
+	src/model/domains/game.cpp
+	src/model/domains/api.cpp
 	src/util/error.cpp
 	src/util/filesystem.cpp
 	src/util/logging.cpp
