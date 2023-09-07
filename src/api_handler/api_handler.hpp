@@ -2,12 +2,8 @@
 
 #include "model/model.hpp"
 #include "util/response.hpp"
-#include <memory>
 
-#include "endpoints/get_players_endpoint.hpp"
-#include "endpoints/join_endpoint.hpp"
-#include "endpoints/map_endpoint.hpp"
-#include "endpoints/maps_endpoint.hpp"
+#include "endpoints/endpoints.hpp"
 
 namespace api_handler {
 
@@ -17,11 +13,11 @@ using verb = boost::beast::http::verb;
 
 class APIHandler {
   public:
-    APIHandler(model::Game &game) : game_(game) {}
+    APIHandler(model::Game &game) : game_(game), endpoints_(GetEndpoints(game_)) {}
 
     template <typename Body, typename Allocator>
     bool dispatch(const http::request<Body, http::basic_fields<Allocator>> &request, Response &response) const {
-        for (const auto &endpoint : endpoints) {
+        for (const auto &endpoint : endpoints_) {
             if (endpoint->match(request)) {
                 response = endpoint->handle(request);
                 return true;
@@ -33,11 +29,7 @@ class APIHandler {
 
   private:
     model::Game &game_;
-    std::vector<std::shared_ptr<Endpoint>> endpoints = {
-        std::shared_ptr<Endpoint>{new MapEndpoint{game_}}, std::shared_ptr<Endpoint>{new MapsEndpoint{game_}},
-        std::shared_ptr<Endpoint>{new JoinEndpoint{game_}}, std::shared_ptr<Endpoint>{new GetPlayersEndpoint(game_)}
-
-    };
+    std::vector<std::shared_ptr<Endpoint>> endpoints_;
 };
 
 } // namespace api_handler

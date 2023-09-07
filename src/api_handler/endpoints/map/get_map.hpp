@@ -1,8 +1,8 @@
 #pragma once
 
-#include "endpoint.hpp"
+#include "api_handler/endpoints/endpoint.hpp"
 
-class MapEndpoint : public Endpoint {
+class GetMapEndpoint : public Endpoint {
   public:
     using Endpoint::Endpoint;
     bool match(const http::request<http::string_body> &request) override {

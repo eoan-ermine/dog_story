@@ -1,8 +1,8 @@
 #pragma once
 
-#include "endpoint.hpp"
+#include "api_handler/endpoints/endpoint.hpp"
 
-class MapsEndpoint : public Endpoint {
+class FallthroughEndpoint : public Endpoint {
   public:
     using Endpoint::Endpoint;
     bool match(const http::request<http::string_body> &request) override {
@@ -17,5 +17,4 @@ class MapsEndpoint : public Endpoint {
                                         json::value_from(util::Error{"badRequest", "Bad request"}));
         }
     };
-    static constexpr std::string_view endpoint{"/api/v1/maps"};
 };

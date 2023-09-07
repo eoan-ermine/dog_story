@@ -1,11 +1,8 @@
 #pragma once
 
-#include "endpoint.hpp"
-#include "model/domains/api.hpp"
-#include "util/response.hpp"
-#include <boost/json/value_from.hpp>
+#include "api_handler/endpoints/endpoint.hpp"
 
-class GetStateEndpoint : public Endpoint {
+class GetPlayersEndpoint : public Endpoint {
   public:
     using Endpoint::Endpoint;
     bool match(const http::request<http::string_body> &request) override { return request.target() == endpoint; }
@@ -32,8 +29,10 @@ class GetStateEndpoint : public Endpoint {
 
   private:
     struct responses {
-        static util::Response ok(const std::unordered_map<model::Player::Id, std::shared_ptr<model::Player>> &players) {
-            return util::Response::Json(http::status::ok, json::value_from(model::GetStateResponse{players}))
+        static util::Response no_token() {
+            return util::Response::Json(http::status::unauthorized,
+                                        json::value_from(util::Error{.code = "invalidToken",
+                                                                     .message = "Authorization header is missing"}))
                 .no_cache();
         }
         static util::Response invalid_method() {
@@ -44,12 +43,6 @@ class GetStateEndpoint : public Endpoint {
                 .no_cache()
                 .allow("GET, HEAD");
         }
-        static util::Response no_token() {
-            return util::Response::Json(http::status::unauthorized,
-                                        json::value_from(util::Error{.code = "invalidToken",
-                                                                     .message = "Authorization header is missing"}))
-                .no_cache();
-        }
         static util::Response no_user_found() {
             auto response = util::Response::Json(
                 http::status::unauthorized,
@@ -57,6 +50,11 @@ class GetStateEndpoint : public Endpoint {
             response.set("Cache-Control", "no-cache");
             return response;
         }
+        static util::Response ok(const std::unordered_map<model::Player::Id, std::shared_ptr<model::Player>> &players) {
+            return util::Response::Json(http::status::ok,
+                                        json::value_from(model::GetPlayersResponse{.players = players}))
+                .no_cache();
+        }
     };
-    static constexpr std::string_view endpoint{"/api/v1/game/state"};
+    static constexpr std::string_view endpoint{"/api/v1/game/players"};
 };

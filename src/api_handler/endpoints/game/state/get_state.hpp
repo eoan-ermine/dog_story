@@ -1,9 +1,8 @@
 #pragma once
 
-#include "endpoint.hpp"
-#include <unordered_map>
+#include "api_handler/endpoints/endpoint.hpp"
 
-class GetPlayersEndpoint : public Endpoint {
+class GetStateEndpoint : public Endpoint {
   public:
     using Endpoint::Endpoint;
     bool match(const http::request<http::string_body> &request) override { return request.target() == endpoint; }
@@ -30,10 +29,8 @@ class GetPlayersEndpoint : public Endpoint {
 
   private:
     struct responses {
-        static util::Response no_token() {
-            return util::Response::Json(http::status::unauthorized,
-                                        json::value_from(util::Error{.code = "invalidToken",
-                                                                     .message = "Authorization header is missing"}))
+        static util::Response ok(const std::unordered_map<model::Player::Id, std::shared_ptr<model::Player>> &players) {
+            return util::Response::Json(http::status::ok, json::value_from(model::GetStateResponse{players}))
                 .no_cache();
         }
         static util::Response invalid_method() {
@@ -44,6 +41,12 @@ class GetPlayersEndpoint : public Endpoint {
                 .no_cache()
                 .allow("GET, HEAD");
         }
+        static util::Response no_token() {
+            return util::Response::Json(http::status::unauthorized,
+                                        json::value_from(util::Error{.code = "invalidToken",
+                                                                     .message = "Authorization header is missing"}))
+                .no_cache();
+        }
         static util::Response no_user_found() {
             auto response = util::Response::Json(
                 http::status::unauthorized,
@@ -51,11 +54,6 @@ class GetPlayersEndpoint : public Endpoint {
             response.set("Cache-Control", "no-cache");
             return response;
         }
-        static util::Response ok(const std::unordered_map<model::Player::Id, std::shared_ptr<model::Player>> &players) {
-            return util::Response::Json(http::status::ok,
-                                        json::value_from(model::GetPlayersResponse{.players = players}))
-                .no_cache();
-        }
     };
-    static constexpr std::string_view endpoint{"/api/v1/game/players"};
+    static constexpr std::string_view endpoint{"/api/v1/game/state"};
 };

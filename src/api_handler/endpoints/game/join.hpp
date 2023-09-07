@@ -1,6 +1,6 @@
 #pragma once
 
-#include "endpoint.hpp"
+#include "api_handler/endpoints/endpoint.hpp"
 
 class JoinEndpoint : public Endpoint {
   public:
