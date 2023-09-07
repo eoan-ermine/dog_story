@@ -30,7 +30,8 @@ class GetStateEndpoint : public Endpoint {
   private:
     struct responses {
         static util::Response ok(const std::unordered_map<model::Player::Id, std::shared_ptr<model::Player>> &players) {
-            return util::Response::Json(http::status::ok, json::value_from(model::GetStateResponse{players}))
+            return util::Response::Json(http::status::ok,
+                                        json::value_from(model::api::responses::GetStateResponse{players}))
                 .no_cache();
         }
         static util::Response invalid_method() {

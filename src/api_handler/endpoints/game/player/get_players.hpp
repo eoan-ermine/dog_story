@@ -52,7 +52,7 @@ class GetPlayersEndpoint : public Endpoint {
         }
         static util::Response ok(const std::unordered_map<model::Player::Id, std::shared_ptr<model::Player>> &players) {
             return util::Response::Json(http::status::ok,
-                                        json::value_from(model::GetPlayersResponse{.players = players}))
+                                        json::value_from(model::api::responses::GetPlayersResponse{.players = players}))
                 .no_cache();
         }
     };

@@ -12,7 +12,8 @@ class JoinEndpoint : public Endpoint {
         }
 
         try {
-            auto [username, map_ident] = value_to<model::JoinRequest>(boost::json::parse(request.body()));
+            auto [username, map_ident] =
+                value_to<model::api::requests::JoinRequest>(boost::json::parse(request.body()));
             return execute(std::move(username), model::Map::Id{std::move(map_ident)});
         } catch (...) {
             return responses::parse_error();
@@ -64,7 +65,7 @@ class JoinEndpoint : public Endpoint {
                 .no_cache();
         }
         static util::Response ok(const std::shared_ptr<model::Player> player, const model::Token &token) {
-            return util::Response::Json(http::status::ok, json::value_from(model::JoinResponse{
+            return util::Response::Json(http::status::ok, json::value_from(model::api::responses::JoinResponse{
                                                               .authToken = token, .playerId = player->GetId()}))
                 .no_cache();
         }

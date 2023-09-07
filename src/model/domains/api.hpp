@@ -11,6 +11,8 @@ namespace model {
 
 using namespace boost::json;
 
+namespace api::requests {
+
 struct JoinRequest {
     std::string userName;
     Map::Id::ValueType mapId;
@@ -18,6 +20,10 @@ struct JoinRequest {
 
 // Deserialize json value to join request
 JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value);
+
+} // namespace api::requests
+
+namespace api::responses {
 
 struct JoinResponse {
     Token authToken;
@@ -40,5 +46,7 @@ struct GetStateResponse {
 
 // Serialize get state response to json value
 void tag_invoke(value_from_tag, value &value, const GetStateResponse &response);
+
+} // namespace api::responses
 
 } // namespace model

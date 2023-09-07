@@ -2,11 +2,17 @@
 
 namespace model {
 
+namespace api::requests {
+
 JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value) {
     const object &obj = value.as_object();
-    return JoinRequest{.userName = value_to<std::string>(obj.at("userName")),
-                       .mapId = value_to<std::string>(obj.at("mapId"))};
+    return api::requests::JoinRequest{.userName = value_to<std::string>(obj.at("userName")),
+                                      .mapId = value_to<std::string>(obj.at("mapId"))};
 }
+
+} // namespace api::requests
+
+namespace api::responses {
 
 void tag_invoke(value_from_tag, value &value, const JoinResponse &response) {
     value = {{"authToken", *response.authToken}, {"playerId", *response.playerId}};
@@ -33,5 +39,7 @@ void tag_invoke(value_from_tag, value &value, const GetStateResponse &response) 
         obj[ident.as_string()] = {{"pos", {x, y}}, {"speed", {dx, dy}}, {"dir", serialize(dog->GetDirection())}};
     }
 }
+
+} // namespace api::responses
 
 } // namespace model
