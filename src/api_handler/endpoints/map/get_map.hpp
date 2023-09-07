@@ -1,6 +1,7 @@
 #pragma once
 
 #include "api_handler/endpoints/endpoint.hpp"
+#include "model/domains/api.hpp"
 
 class GetMapEndpoint : public Endpoint {
   public:
@@ -16,17 +17,13 @@ class GetMapEndpoint : public Endpoint {
         const auto *map_ptr = game_.FindMap(map_ident);
 
         if (!map_ptr)
-            return responses::not_found();
+            return model::api::errors::map_not_found();
         else
             return responses::ok(map_ptr);
     }
 
   private:
     struct responses {
-        static util::Response not_found() {
-            return util::Response::Json(http::status::not_found,
-                                        json::value_from(util::Error{"mapNotFound", "Map not found"}));
-        }
         static util::Response ok(const model::Map *map_ptr) {
             return util::Response::Json(http::status::ok, json::value_from(*map_ptr));
         }

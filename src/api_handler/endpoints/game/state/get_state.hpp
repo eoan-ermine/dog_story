@@ -11,9 +11,9 @@ class GetStateEndpoint : public Endpoint {
 
         // TODO: Пустой токен засчитывается за валидный, исправить
         if (!request.count("Authorization") || !request["Authorization"].starts_with("Authorization: Bearer ")) {
-            return responses::no_token();
+            return model::api::errors::no_token();
         } else if (method != http::verb::get && method != http::verb::head) {
-            return responses::invalid_method();
+            return model::api::errors::only_get_and_head();
         } else {
             return execute(request["Authorization"]);
         }
@@ -21,7 +21,7 @@ class GetStateEndpoint : public Endpoint {
     util::Response execute(std::string token) {
         auto player = game_.GetPlayer(token);
         if (!player) {
-            return responses::no_user_found();
+            return model::api::errors::no_user_found();
         }
         const auto &players = game_.GetPlayers(player->GetSession()->GetMap()->GetId());
         return responses::ok(players);
@@ -33,27 +33,6 @@ class GetStateEndpoint : public Endpoint {
             return util::Response::Json(http::status::ok,
                                         json::value_from(model::api::responses::GetStateResponse{players}))
                 .no_cache();
-        }
-        static util::Response invalid_method() {
-            return util::Response::Json(
-                       http::status::method_not_allowed,
-                       json::value_from(
-                           util::Error{.code = "invalidMethod", .message = "Only GET and HEAD methods are expected"}))
-                .no_cache()
-                .allow("GET, HEAD");
-        }
-        static util::Response no_token() {
-            return util::Response::Json(http::status::unauthorized,
-                                        json::value_from(util::Error{.code = "invalidToken",
-                                                                     .message = "Authorization header is missing"}))
-                .no_cache();
-        }
-        static util::Response no_user_found() {
-            auto response = util::Response::Json(
-                http::status::unauthorized,
-                json::value_from(util::Error{.code = "invalidToken", .message = "Player token has not been found"}));
-            response.set("Cache-Control", "no-cache");
-            return response;
         }
     };
     static constexpr std::string_view endpoint{"/api/v1/game/state"};
