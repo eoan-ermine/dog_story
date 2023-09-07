@@ -110,6 +110,10 @@ class Map {
 
     const Offices &GetOffices() const noexcept { return offices_; }
 
+    void SetDogSpeed(double dog_speed) { dog_speed_ = dog_speed; }
+
+    std::optional<double> GetDogSpeed() { return dog_speed_; }
+
   private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t>;
 
@@ -119,6 +123,7 @@ class Map {
     std::string name_;
     Roads roads_;
     Buildings buildings_;
+    std::optional<double> dog_speed_;
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;

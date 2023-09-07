@@ -81,8 +81,14 @@ Map tag_invoke(value_to_tag<Map>, const value &value) {
     auto id = to_string(obj.at("id"sv).as_string());
     auto name = to_string(obj.at("name"sv).as_string());
 
-    return {Map::Id{id}, name, value_to<std::vector<Road>>(obj.at("roads")),
+    auto map =
+        Map{Map::Id{id}, name, value_to<std::vector<Road>>(obj.at("roads")),
             value_to<std::vector<Building>>(obj.at("buildings")), value_to<std::vector<Office>>(obj.at("offices"))};
+    if (obj.contains("dogSpeed")) {
+        map.SetDogSpeed(obj.at("dogSpeed").as_double());
+    }
+
+    return map;
 }
 
 void Map::AddOffice(Office &&office) {

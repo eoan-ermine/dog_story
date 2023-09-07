@@ -6,8 +6,18 @@ namespace model {
 
 Game tag_invoke(value_to_tag<Game>, const value &value) {
     const object &obj = value.as_object();
+    auto maps = value_to<std::vector<Map>>(obj.at("maps"));
 
-    return Game{value_to<std::vector<Map>>(obj.at("maps"))};
+    double default_dog_speed = 1.0;
+    if (obj.contains("defaultDogSpeed")) {
+        default_dog_speed = obj.at("defaultDogSpeed").as_double();
+    }
+    for (auto &map : maps) {
+        if (!map.GetDogSpeed())
+            map.SetDogSpeed(default_dog_speed);
+    }
+
+    return Game{std::move(maps)};
 }
 
 void tag_invoke(value_from_tag, value &value, const Game::Maps &maps) {
