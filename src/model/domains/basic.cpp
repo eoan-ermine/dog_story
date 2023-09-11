@@ -5,6 +5,24 @@ using namespace std::literals;
 
 namespace model {
 
+Direction parse(std::string_view direction) {
+    if (direction.empty())
+        return Direction::NO;
+
+    switch (direction[0]) {
+    case 'L':
+        return Direction::WEST;
+    case 'R':
+        return Direction::EAST;
+    case 'U':
+        return Direction::NORTH;
+    case 'D':
+        return Direction::SOUTH;
+    }
+
+    std::unreachable();
+}
+
 std::string_view serialize(Direction direction) {
     switch (direction) {
     case model::Direction::EAST:
@@ -15,8 +33,9 @@ std::string_view serialize(Direction direction) {
         return "S";
     case model::Direction::WEST:
         return "W";
+    case model::Direction::NO:
+        std::unreachable();
     }
-    std::unreachable();
 }
 
 } // namespace model

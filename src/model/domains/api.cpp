@@ -10,6 +10,11 @@ JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value) {
                                       .mapId = value_to<std::string>(obj.at("mapId"))};
 }
 
+ActionRequest tag_invoke(value_to_tag<ActionRequest>, const value &value) {
+    const object &obj = value.as_object();
+    return ActionRequest{model::parse(obj.at("move").as_string())};
+}
+
 } // namespace api::requests
 
 namespace api::responses {

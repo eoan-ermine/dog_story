@@ -57,6 +57,12 @@ class Dog {
 
     Direction GetDirection() const { return direction_; }
 
+    void SetPosition(std::pair<double, double> position) { position_ = position; }
+
+    void SetSpeed(std::pair<double, double> speed) { speed_ = speed; }
+
+    void SetDirection(Direction direction) { direction_ = direction; }
+
   private:
     // После добавления на карту пёс должен иметь скорость, равную нулю. Направление пса по умолчанию — на север.
     Dog(Id id, std::string name, std::pair<double, double> position)

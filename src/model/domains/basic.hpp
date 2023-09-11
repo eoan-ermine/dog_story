@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/json.hpp>
+#include <string_view>
 
 namespace model {
 
@@ -30,9 +31,11 @@ enum class Direction {
     NORTH, // Север
     SOUTH, // Юг
     WEST,  // Запад
-    EAST   // Восток
+    EAST,  // Восток
+    NO,
 };
 
+Direction parse(std::string_view direction);
 std::string_view serialize(Direction direction);
 
 } // namespace model

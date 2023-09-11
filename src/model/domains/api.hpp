@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "basic.hpp"
 #include "game.hpp"
 #include "map.hpp"
 #include "util/error.hpp"
@@ -22,6 +23,13 @@ struct JoinRequest {
 
 // Deserialize json value to join request
 JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value);
+
+struct ActionRequest {
+    Direction move;
+};
+
+// Deserialize json value to action request
+ActionRequest tag_invoke(value_to_tag<ActionRequest>, const value &value);
 
 } // namespace api::requests
 
@@ -101,6 +109,12 @@ static util::Response invalid_username() {
 static util::Response map_not_found() {
     return util::Response::Json(status::not_found,
                                 value_from(util::Error{.code = "mapNotFound", .message = "Map not found"}))
+        .no_cache();
+}
+
+static util::Response invalid_content_type() {
+    return util::Response::Json(status::bad_request,
+                                value_from(util::Error{.code = "invalidArgument", .message = "Invalid content type"}))
         .no_cache();
 }
 
