@@ -12,6 +12,8 @@ using Coord = Dimension;
 
 struct Point {
     Coord x, y;
+
+    bool operator==(const Point &rhs) const { return std::tie(x, y) == std::tie(rhs.x, rhs.y); }
 };
 
 struct Size {

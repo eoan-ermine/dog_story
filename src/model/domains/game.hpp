@@ -283,6 +283,7 @@ class Game {
                             return start_dimension - 0.4;
                         }
                     }
+                    return new_coordinate;
                 };
 
                 if (dx == 0) {
