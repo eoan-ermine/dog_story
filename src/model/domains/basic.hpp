@@ -38,4 +38,9 @@ enum class Direction {
 Direction parse(std::string_view direction);
 std::string_view serialize(Direction direction);
 
+enum class Orientation {
+    HORIZONTAL,
+    VERTICAL,
+};
+
 } // namespace model

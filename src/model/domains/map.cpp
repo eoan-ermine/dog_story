@@ -22,10 +22,10 @@ Road tag_invoke(value_to_tag<Road>, const value &value) {
 
     if (obj.count("x1")) {
         int end_x = obj.at("x1"sv).as_int64();
-        return Road{Road::HORIZONTAL, Point{start_x, start_y}, end_x};
+        return Road{Orientation::HORIZONTAL, Point{start_x, start_y}, end_x};
     } else {
         int end_y = obj.at("y1"sv).as_int64();
-        return Road{Road::VERTICAL, Point{start_x, start_y}, end_y};
+        return Road{Orientation::VERTICAL, Point{start_x, start_y}, end_y};
     }
 }
 

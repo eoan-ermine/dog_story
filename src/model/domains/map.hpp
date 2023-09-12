@@ -10,31 +10,32 @@ namespace model {
 using namespace boost::json;
 
 class Road {
-    struct HorizontalTag {
-        HorizontalTag() = default;
-    };
-
-    struct VerticalTag {
-        VerticalTag() = default;
-    };
-
   public:
-    constexpr static HorizontalTag HORIZONTAL{};
-    constexpr static VerticalTag VERTICAL{};
+    Road(Orientation orientation, Point start, Coord end_dimension) noexcept
+        : orientation_(orientation), start_{start} {
+        switch (orientation) {
 
-    Road(HorizontalTag, Point start, Coord end_x) noexcept : start_{start}, end_{end_x, start.y} {}
+        case Orientation::HORIZONTAL:
+            end_ = {end_dimension, start.y};
+            break;
+        case Orientation::VERTICAL:
+            end_ = {start.x, end_dimension};
+            break;
+        }
+    }
 
-    Road(VerticalTag, Point start, Coord end_y) noexcept : start_{start}, end_{start.x, end_y} {}
+    Orientation GetOrientation() const noexcept { return orientation_; }
 
-    bool IsHorizontal() const noexcept { return start_.y == end_.y; }
+    bool IsHorizontal() const noexcept { return orientation_ == Orientation::HORIZONTAL; }
 
-    bool IsVertical() const noexcept { return start_.x == end_.x; }
+    bool IsVertical() const noexcept { return orientation_ == Orientation::VERTICAL; }
 
     Point GetStart() const noexcept { return start_; }
 
     Point GetEnd() const noexcept { return end_; }
 
   private:
+    Orientation orientation_;
     Point start_;
     Point end_;
 };
