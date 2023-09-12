@@ -24,6 +24,7 @@ add_executable(game_server
 	src/util/logging.cpp
 	src/util/mime_type.cpp
 	src/util/response.cpp
+	src/util/ticker.cpp
 	src/json_loader.cpp
 	src/request_handler.cpp
 )
