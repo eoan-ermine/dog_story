@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <boost/json.hpp>
 
 #include <memory>
@@ -178,6 +179,8 @@ class PlayerTokens {
 
 class Players {
   public:
+    using PlayersContainer = std::unordered_map<Map::Id, std::unordered_map<Dog::Id, std::shared_ptr<Player>>>;
+
     std::shared_ptr<Player> Add(std::string name, std::shared_ptr<GameSession> session) {
         auto player = std::make_shared<Player>(name, session);
         const auto &dog = player->GetDog();
@@ -194,8 +197,12 @@ class Players {
         return players_[map_id];
     }
 
+    PlayersContainer::iterator begin() { return players_.begin(); }
+
+    PlayersContainer::iterator end() { return players_.end(); }
+
   private:
-    std::unordered_map<Map::Id, std::unordered_map<Dog::Id, std::shared_ptr<Player>>> players_;
+    PlayersContainer players_;
 };
 
 class Game {
@@ -239,6 +246,57 @@ class Game {
 
     const std::unordered_map<Dog::Id, std::shared_ptr<Player>> &GetPlayers(const Map::Id &map_id) {
         return players_.GetPlayers(map_id);
+    }
+
+    void Tick(double milliseconds) {
+        for (auto &[_, players] : players_) {
+            for (auto &[_, player] : players) {
+                auto [dx, dy] = player->GetDog()->GetSpeed();
+                if (dx == 0 && dy == 0) {
+                    continue;
+                }
+
+                auto [x, y] = player->GetDog()->GetPosition();
+                auto current_point = Point{static_cast<int>(std::round(x)), static_cast<int>(std::round(y))};
+                auto [point_x, point_y] = current_point;
+
+                auto map = player->GetSession()->GetMap();
+
+                auto road = map->GetPointsToRoads()
+                                .at(dx != 0 ? Orientation::HORIZONTAL : Orientation::VERTICAL)
+                                .at(current_point);
+                auto [start_x, start_y] = road->GetStart();
+                auto [end_x, end_y] = road->GetEnd();
+
+                auto need_to_stop = false;
+                auto get_new_coordinate = [&](double original_dimension, double dimension_shift, double start_dimension,
+                                              double end_dimension) {
+                    auto new_coordinate = original_dimension + dimension_shift;
+                    if (dimension_shift > 0) {
+                        if (new_coordinate > (end_dimension + 0.4)) {
+                            need_to_stop = true;
+                            return end_dimension + 0.4;
+                        }
+                    } else if (dimension_shift < 0) {
+                        if (new_coordinate < (start_dimension - 0.4)) {
+                            need_to_stop = true;
+                            return start_dimension - 0.4;
+                        }
+                    }
+                };
+
+                if (dx == 0) {
+                    y = get_new_coordinate(y, dy * (milliseconds / 1000.0), start_y, end_y);
+                } else if (dy == 0) {
+                    x = get_new_coordinate(x, dx * (milliseconds / 1000.0), start_x, end_x);
+                }
+                if (need_to_stop) {
+                    player->GetDog()->SetSpeed({0, 0});
+                }
+
+                player->GetDog()->SetPosition({x, y});
+            }
+        }
     }
 
   private:

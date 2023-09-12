@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/json.hpp>
+#include <unordered_map>
 
 #include "basic.hpp"
 #include "util/tagged.hpp"
@@ -87,6 +88,11 @@ class Map {
   public:
     using Id = util::Tagged<std::string, Map>;
     using Roads = std::vector<Road>;
+    using PointsToRoads =
+        std::unordered_map<Orientation, std::unordered_map<Point, const Road *, decltype([](const Point &point) {
+                                                               return std::hash<int>()(point.x) ^
+                                                                      std::hash<int>()(point.y);
+                                                           })>>;
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
@@ -99,6 +105,20 @@ class Map {
         for (auto &&office : offices) {
             AddOffice(std::move(office));
         }
+        for (const auto &road : roads) {
+            auto current_point = road.GetStart(), end_point = road.GetEnd();
+            if (road.IsHorizontal()) {
+                while (current_point.x <= end_point.x) {
+                    point_to_road_[Orientation::HORIZONTAL][current_point] = &road;
+                    current_point.x += 1;
+                }
+            } else if (road.IsVertical()) {
+                while (current_point.y <= end_point.y) {
+                    point_to_road_[Orientation::VERTICAL][current_point] = &road;
+                    current_point.y += 1;
+                }
+            }
+        }
     }
 
     const Id &GetId() const noexcept { return id_; }
@@ -108,6 +128,8 @@ class Map {
     const Buildings &GetBuildings() const noexcept { return buildings_; }
 
     const Roads &GetRoads() const noexcept { return roads_; }
+
+    const PointsToRoads &GetPointsToRoads() const noexcept { return point_to_road_; }
 
     const Offices &GetOffices() const noexcept { return offices_; }
 
@@ -123,6 +145,7 @@ class Map {
     Id id_;
     std::string name_;
     Roads roads_;
+    PointsToRoads point_to_road_;
     Buildings buildings_;
     std::optional<double> dog_speed_;
 
