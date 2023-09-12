@@ -1,19 +1,22 @@
-#include "http_server.hpp"
-#include "util/logging.hpp"
 #include "util/sdk.hpp"
-
-#include <boost/asio/strand.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/setup/console.hpp>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
-#include <boost/log/core.hpp>
+#include <boost/asio/strand.hpp>
+
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/setup/console.hpp>
+
+#include <boost/program_options.hpp>
+
 #include <iostream>
+#include <optional>
 #include <thread>
 
+#include "http_server.hpp"
 #include "json_loader.hpp"
 #include "request_handler.hpp"
+#include "util/logging.hpp"
 
 using namespace std::literals;
 using namespace util;
@@ -38,19 +41,65 @@ void RunWorkers(unsigned num_threads, const Fn &fn) {
 
 } // namespace
 
-int main(int argc, const char *argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: game_server <game-config-json> <static-content-directory>"sv << std::endl;
-        return EXIT_FAILURE;
+struct Args {
+    int tick_period;
+    std::string config_file;
+    std::string www_root;
+    bool randomize_spawn_points{false};
+};
+
+[[nodiscard]]
+std::optional<Args> ParseCommandLine(int argc, const char *const argv[]) {
+    namespace po = boost::program_options;
+
+    po::options_description desc{"All options"s};
+
+    Args args;
+    // clang-format off
+    desc.add_options()
+        ("help,h", "Show help")
+        ("tick-period,t", po::value(&args.tick_period)->value_name("milliseconds"s), "set tick period")
+        ("config-file,c", po::value(&args.config_file)->value_name("file"), "set config file path")
+        ("www-root,w", po::value(&args.www_root)->value_name("dir"), "set static files root")
+        ("randomize-spawn-points", po::bool_switch(&args.randomize_spawn_points), "spawn dogs at random positions");
+    // clang-format on
+
+    // variables_map хранит значения опций после разбора
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.contains("help"s)) {
+        // Если был указан параметр --help, то выводим справку и возвращаем nullopt
+        std::cout << desc;
+        return std::nullopt;
     }
 
+    if (!vm.contains("config-file")) {
+        throw std::runtime_error{"Config file has not been specified"s};
+    }
+
+    if (!vm.contains("www-root")) {
+        throw std::runtime_error{"Static files path has not been specified"s};
+    }
+
+    // С опциями программы всё в порядке, возвращаем структуру args
+    return args;
+}
+
+int main(int argc, const char *argv[]) {
     // 0. Инициализируем логер
     logging::add_console_log(std::clog, logging::keywords::format = &LogFormatter);
     logging::add_common_attributes();
 
     try {
+        auto args = ParseCommandLine(argc, argv);
+        if (!args) {
+            return EXIT_SUCCESS;
+        }
+
         // 1. Загружаем карту из файла и построить модель игры
-        model::Game game = json_loader::LoadGame(argv[1]);
+        model::Game game = json_loader::LoadGame(args->config_file);
 
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
@@ -65,7 +114,7 @@ int main(int argc, const char *argv[]) {
         });
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        request_handler::RequestHandler handler{game, argv[2], net::make_strand(ioc)};
+        request_handler::RequestHandler handler{game, args->www_root, net::make_strand(ioc)};
 
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");
@@ -86,7 +135,6 @@ int main(int argc, const char *argv[]) {
     } catch (const std::exception &ex) {
         // Логирование завершения программы с ошибкой
         LogExit(EXIT_FAILURE, ex.what());
-
         return EXIT_FAILURE;
     }
 }
