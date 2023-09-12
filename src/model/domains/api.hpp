@@ -31,6 +31,13 @@ struct ActionRequest {
 // Deserialize json value to action request
 ActionRequest tag_invoke(value_to_tag<ActionRequest>, const value &value);
 
+struct TickRequest {
+    std::chrono::milliseconds timedelta;
+};
+
+// Deserialize json value to tick request
+TickRequest tag_invoke(value_to_tag<TickRequest>, const value &value);
+
 } // namespace api::requests
 
 namespace api::responses {

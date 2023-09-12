@@ -3,7 +3,7 @@
 #include "api_handler/endpoints/endpoint.hpp"
 #include "model/domains/api.hpp"
 
-class GetMapEndpoint : public Endpoint {
+class ActionEndpoint : public Endpoint {
   public:
     using Endpoint::Endpoint;
     bool match(const http::request<http::string_body> &request) override { return request.target() == endpoint; }

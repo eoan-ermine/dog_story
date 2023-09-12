@@ -1,4 +1,5 @@
 #include "api.hpp"
+#include <chrono>
 
 namespace model {
 
@@ -13,6 +14,11 @@ JoinRequest tag_invoke(value_to_tag<JoinRequest>, const value &value) {
 ActionRequest tag_invoke(value_to_tag<ActionRequest>, const value &value) {
     const object &obj = value.as_object();
     return ActionRequest{model::parse(obj.at("move").as_string())};
+}
+
+TickRequest tag_invoke(value_to_tag<TickRequest>, const value &value) {
+    const object &obj = value.as_object();
+    return TickRequest{std::chrono::milliseconds{obj.at("timeDelta").as_int64()}};
 }
 
 } // namespace api::requests
