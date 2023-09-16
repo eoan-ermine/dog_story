@@ -8,6 +8,9 @@ class TickEndpoint : public Endpoint {
     using Endpoint::Endpoint;
     bool match(const http::request<http::string_body> &request) override { return request.target() == endpoint; }
     util::Response handle(const http::request<http::string_body> &request) override {
+        if (game_.GetTickPeriod().has_value())
+            return model::api::errors::invalid_endpoint();
+
         try {
             auto [timedelta] = value_to<model::api::requests::TickRequest>(boost::json::parse(request.body()));
             return execute(timedelta);

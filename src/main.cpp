@@ -42,7 +42,7 @@ void RunWorkers(unsigned num_threads, const Fn &fn) {
 } // namespace
 
 struct Args {
-    int tick_period;
+    std::optional<int> tick_period;
     std::string config_file;
     std::string www_root;
     bool randomize_spawn_points{false};
@@ -56,9 +56,10 @@ std::optional<Args> ParseCommandLine(int argc, const char *const argv[]) {
 
     Args args;
     // clang-format off
+    int tick_period;
     desc.add_options()
         ("help,h", "Show help")
-        ("tick-period,t", po::value(&args.tick_period)->value_name("milliseconds"s), "set tick period")
+        ("tick-period,t", po::value(&tick_period)->value_name("milliseconds"s), "set tick period")
         ("config-file,c", po::value(&args.config_file)->value_name("file"), "set config file path")
         ("www-root,w", po::value(&args.www_root)->value_name("dir"), "set static files root")
         ("randomize-spawn-points", po::bool_switch(&args.randomize_spawn_points), "spawn dogs at random positions");
@@ -73,6 +74,10 @@ std::optional<Args> ParseCommandLine(int argc, const char *const argv[]) {
         // Если был указан параметр --help, то выводим справку и возвращаем nullopt
         std::cout << desc;
         return std::nullopt;
+    }
+
+    if (vm.contains("tick-period")) {
+        args.tick_period = tick_period;
     }
 
     if (!vm.contains("config-file")) {
@@ -100,6 +105,9 @@ int main(int argc, const char *argv[]) {
 
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(args->config_file);
+        if (args->tick_period) {
+            game.SetTickPeriod(*args->tick_period);
+        }
 
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();

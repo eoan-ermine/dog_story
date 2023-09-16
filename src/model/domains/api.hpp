@@ -125,6 +125,12 @@ static util::Response invalid_content_type() {
         .no_cache();
 }
 
+static util::Response invalid_endpoint() {
+    return util::Response::Json(status::bad_request,
+                                value_from(util::Error{.code = "badRequest", .message = "Invalid endpoint"}))
+        .no_cache();
+}
+
 } // namespace api::errors
 
 } // namespace model

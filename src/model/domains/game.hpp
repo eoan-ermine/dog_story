@@ -248,6 +248,10 @@ class Game {
         return players_.GetPlayers(map_id);
     }
 
+    std::optional<int> GetTickPeriod() const { return tick_period_; }
+
+    void SetTickPeriod(int tick_period) { tick_period_ = tick_period; }
+
     void Tick(double milliseconds) {
         for (auto &[_, players] : players_) {
             for (auto &[_, player] : players) {
@@ -310,6 +314,7 @@ class Game {
     std::vector<GameSession> sessions_;
     Players players_;
     PlayerTokens player_tokens_;
+    std::optional<int> tick_period_;
 };
 
 // Deserialize json value to game structure
