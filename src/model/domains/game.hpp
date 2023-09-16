@@ -20,30 +20,36 @@ class Dog {
   public:
     using Id = util::Tagged<std::size_t, Dog>;
 
-    static std::shared_ptr<Dog> Create(std::string name, const Map &map) {
+    static std::shared_ptr<Dog> Create(std::string name, const Map &map, bool randomize_spawn_points) {
         // Координаты пса — случайно выбранная точка на случайно выбранном отрезке дороги этой карты
         static std::size_t last_id = 0;
 
-        const auto &roads = map.GetRoads();
-        std::mt19937_64 generator{[] {
-            std::random_device random_device;
-            std::uniform_int_distribution<std::mt19937_64::result_type> dist;
-            return dist(random_device);
-        }()};
+        std::pair<double, double> position;
+        if (randomize_spawn_points) {
+            const auto &roads = map.GetRoads();
+            std::mt19937_64 generator{[] {
+                std::random_device random_device;
+                std::uniform_int_distribution<std::mt19937_64::result_type> dist;
+                return dist(random_device);
+            }()};
 
-        std::pair<double, double> position([&]() -> std::pair<double, double> {
-            std::uniform_int_distribution<int> uniform_dist(0, roads.size() - 1);
-            const auto &road = roads[uniform_dist(generator)];
-            auto start = road.GetStart(), end = road.GetEnd();
-            if (road.IsVertical()) {
-                std::uniform_int_distribution<int> uniform_dist(start.y, end.y);
-                return {start.x, uniform_dist(generator)};
-            } else if (road.IsHorizontal()) {
-                std::uniform_int_distribution<int> uniform_dist(start.x, end.x);
-                return {uniform_dist(generator), start.y};
-            }
-            std::unreachable();
-        }());
+            position = [&]() -> std::pair<double, double> {
+                std::uniform_int_distribution<int> uniform_dist(0, roads.size() - 1);
+                const auto &road = roads[uniform_dist(generator)];
+                auto start = road.GetStart(), end = road.GetEnd();
+                if (road.IsVertical()) {
+                    std::uniform_int_distribution<int> uniform_dist(start.y, end.y);
+                    return {start.x, uniform_dist(generator)};
+                } else if (road.IsHorizontal()) {
+                    std::uniform_int_distribution<int> uniform_dist(start.x, end.x);
+                    return {uniform_dist(generator), start.y};
+                }
+                std::unreachable();
+            }();
+        } else {
+            auto [x, y] = map.GetRoads()[0].GetStart();
+            position = {x, y};
+        }
 
         return std::shared_ptr<Dog>(new Dog(Id{last_id++}, name, position));
     }
@@ -121,8 +127,8 @@ class Player {
   public:
     using Id = Dog::Id;
 
-    Player(std::string name, std::shared_ptr<GameSession> session) : session_(session) {
-        dog_ = Dog::Create(name, *session->GetMap());
+    Player(std::string name, std::shared_ptr<GameSession> session, bool randomize_spawn_points) : session_(session) {
+        dog_ = Dog::Create(name, *session->GetMap(), randomize_spawn_points);
         session->AddDog(dog_);
     }
 
@@ -181,8 +187,8 @@ class Players {
   public:
     using PlayersContainer = std::unordered_map<Map::Id, std::unordered_map<Dog::Id, std::shared_ptr<Player>>>;
 
-    std::shared_ptr<Player> Add(std::string name, std::shared_ptr<GameSession> session) {
-        auto player = std::make_shared<Player>(name, session);
+    std::shared_ptr<Player> Add(std::string name, std::shared_ptr<GameSession> session, bool randomize_spawn_points) {
+        auto player = std::make_shared<Player>(name, session, randomize_spawn_points);
         const auto &dog = player->GetDog();
 
         players_[session->GetMap()->GetId()][dog->GetId()] = player;
@@ -235,7 +241,8 @@ class Game {
     }
 
     std::pair<std::shared_ptr<Player>, Token> AddPlayer(std::string username, std::shared_ptr<GameSession> session) {
-        auto player = players_.Add(std::move(username), std::shared_ptr<model::GameSession>(session));
+        auto player =
+            players_.Add(std::move(username), std::shared_ptr<model::GameSession>(session), randomize_spawn_points_);
         auto token = player_tokens_.AddPlayer(player);
         return {player, token};
     }
@@ -251,6 +258,10 @@ class Game {
     std::optional<int> GetTickPeriod() const { return tick_period_; }
 
     void SetTickPeriod(int tick_period) { tick_period_ = tick_period; }
+
+    bool GetRandomizeSpawnPoints() const { return randomize_spawn_points_; }
+
+    void SetRandomizeSpawnPoint(bool randomize_spawn_points) { randomize_spawn_points_ = randomize_spawn_points; }
 
     void Tick(double milliseconds) {
         for (auto &[_, players] : players_) {
@@ -315,6 +326,7 @@ class Game {
     Players players_;
     PlayerTokens player_tokens_;
     std::optional<int> tick_period_;
+    bool randomize_spawn_points_;
 };
 
 // Deserialize json value to game structure

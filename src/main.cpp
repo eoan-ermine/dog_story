@@ -120,6 +120,7 @@ int main(int argc, const char *argv[]) {
 
         // 3. Загружаем карту из файла и строим модель игры
         model::Game game = json_loader::LoadGame(args->config_file);
+        game.SetRandomizeSpawnPoint(args->randomize_spawn_points);
         if (args->tick_period) {
             game.SetTickPeriod(*args->tick_period);
             Ticker ticker{api_strand, std::chrono::milliseconds{*args->tick_period},
