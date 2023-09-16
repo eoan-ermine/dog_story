@@ -9,6 +9,7 @@
 
 #include <boost/program_options.hpp>
 
+#include <chrono>
 #include <iostream>
 #include <optional>
 #include <thread>
@@ -17,6 +18,7 @@
 #include "json_loader.hpp"
 #include "request_handler.hpp"
 #include "util/logging.hpp"
+#include "util/ticker.hpp"
 
 using namespace std::literals;
 using namespace util;
@@ -103,17 +105,12 @@ int main(int argc, const char *argv[]) {
             return EXIT_SUCCESS;
         }
 
-        // 1. Загружаем карту из файла и построить модель игры
-        model::Game game = json_loader::LoadGame(args->config_file);
-        if (args->tick_period) {
-            game.SetTickPeriod(*args->tick_period);
-        }
-
-        // 2. Инициализируем io_context
+        // 1. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
+        auto api_strand = net::make_strand(ioc);
 
-        // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
+        // 2. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const boost::system::error_code &ec, int signal_number) {
             if (!ec) {
@@ -121,8 +118,19 @@ int main(int argc, const char *argv[]) {
             }
         });
 
+        // 3. Загружаем карту из файла и строим модель игры
+        model::Game game = json_loader::LoadGame(args->config_file);
+        if (args->tick_period) {
+            game.SetTickPeriod(*args->tick_period);
+            Ticker ticker{api_strand, std::chrono::milliseconds{*args->tick_period},
+                          [tick_period = *args->tick_period, &game](std::chrono::milliseconds delta) {
+                              game.Tick(delta.count());
+                          }};
+            ticker.Start();
+        }
+
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        request_handler::RequestHandler handler{game, args->www_root, net::make_strand(ioc)};
+        request_handler::RequestHandler handler{game, args->www_root, api_strand};
 
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");
