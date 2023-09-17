@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 project(game_server CXX)
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 
 set(USE_CONAN_V1 ${CONANV1})
 set(USE_CONAN_V2 ${CONANV2})
@@ -18,9 +18,6 @@ elseif ((DEFINED USE_CONAN_V1) AND (USE_CONAN_V1))
 	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 	# Выполняем макрос из conanbuildinfo.cmake, который настроит СMake на работу с библиотеками, установленными Conan
 	conan_basic_setup()
-elseif ((DEFINED USE_CONAN_V2) AND (USE_CONAN_V2))
-else ()
-	message(FATAL_ERROR "Please, set up one of the following flags on: CONANV1, CONANV2")
 endif ()
 
 find_package(Boost 1.81.0 REQUIRED COMPONENTS program_options json log)

@@ -19,8 +19,6 @@ Direction parse(std::string_view direction) {
     case 'D':
         return Direction::SOUTH;
     }
-
-    std::unreachable();
 }
 
 std::string_view serialize(Direction direction) {
@@ -33,8 +31,6 @@ std::string_view serialize(Direction direction) {
         return "S";
     case model::Direction::WEST:
         return "W";
-    case model::Direction::NO:
-        std::unreachable();
     }
 }
 

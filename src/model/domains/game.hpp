@@ -45,7 +45,6 @@ class Dog {
                     std::uniform_int_distribution<int> uniform_dist(start.x, end.x);
                     return {uniform_dist(generator), start.y};
                 }
-                std::unreachable();
             }();
         } else {
             auto [x, y] = map.GetRoads()[0].GetStart();
