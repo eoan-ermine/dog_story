@@ -11,9 +11,8 @@ unset(CONANV1)
 unset(CONANV2 CACHE)
 unset(CONANV2)
 
-if ((NOT DEFINED USE_CONAN_V1) AND (NOT DEFINED USE_CONAN_V2))
-	message(FATAL_ERROR "Please, specify one of the following flags: CONANV1, CONANV2")
-elseif ((DEFINED USE_CONAN_V1) AND (USE_CONAN_V1))
+if ((DEFINED USE_CONAN_V2) AND (USE_CONAN_V2))
+else()
 	# Подключаем сгенерированный скрипт conanbuildinfo.cmake, созданный Conan
 	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 	# Выполняем макрос из conanbuildinfo.cmake, который настроит СMake на работу с библиотеками, установленными Conan
