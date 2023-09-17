@@ -10,6 +10,7 @@
 
 #include "basic.hpp"
 #include "map.hpp"
+#include "util/string_hash.hpp"
 
 namespace model {
 
@@ -121,7 +122,7 @@ struct TokenTag {};
 
 } // namespace detail
 
-using Token = util::Tagged<std::string, detail::TokenTag>;
+using Token = util::Tagged<std::string_view, detail::TokenTag>;
 
 class Player {
   public:
@@ -152,21 +153,22 @@ void tag_invoke(value_from_tag, value &value, const Player &player);
 
 class PlayerTokens {
   public:
-    std::shared_ptr<Player> FindPlayerByToken(Token token) {
-        if (token_to_player_.contains(token)) {
-            return token_to_player_[token];
+    std::shared_ptr<Player> FindPlayerByToken(std::string_view token) {
+        auto it = token_to_player_.find(token);
+        if (it == token_to_player_.end()) {
+            return nullptr;
         }
-        return nullptr;
+        return it->second;
     }
 
     Token AddPlayer(std::shared_ptr<Player> player) {
         std::stringstream stream;
         stream << std::hex << generator1_() << generator2_();
 
-        Token token(stream.str());
-        token_to_player_.insert({token, player});
+        std::string token(stream.str());
+        auto [it, _] = token_to_player_.insert({token, player});
 
-        return token;
+        return Token{it->first};
     }
 
   private:
@@ -180,7 +182,7 @@ class PlayerTokens {
         return dist(random_device_);
     }()};
 
-    std::unordered_map<Token, std::shared_ptr<Player>> token_to_player_;
+    std::unordered_map<std::string, std::shared_ptr<Player>, string_hash, std::equal_to<>> token_to_player_;
 };
 
 class Players {
@@ -245,9 +247,7 @@ class Game {
         return {player, token};
     }
 
-    std::shared_ptr<Player> GetPlayer(std::string token) {
-        return player_tokens_.FindPlayerByToken(Token{std::move(token)});
-    }
+    std::shared_ptr<Player> GetPlayer(std::string_view token) { return player_tokens_.FindPlayerByToken(token); }
 
     const std::unordered_map<Dog::Id, std::shared_ptr<Player>> &GetPlayers(const Map::Id &map_id) {
         return players_.GetPlayers(map_id);

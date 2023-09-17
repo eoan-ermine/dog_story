@@ -1,6 +1,7 @@
 #pragma once
 
 #include "api_handler/endpoints/endpoint.hpp"
+#include <string_view>
 
 class GetPlayersEndpoint : public Endpoint {
   public:
@@ -10,20 +11,23 @@ class GetPlayersEndpoint : public Endpoint {
         auto method = request.method();
 
         // TODO: Пустой токен засчитывается за валидный, исправить
-        if (!request.count("Authorization") || !request["Authorization"].starts_with("Authorization: Bearer ")) {
+        std::string_view authorization_prefix = "Bearer ";
+        if (!request.count("Authorization") || !request["Authorization"].starts_with(authorization_prefix)) {
             return model::api::errors::no_token();
         } else if (method != http::verb::get && method != http::verb::head) {
             return model::api::errors::only_get_and_head();
         } else {
-            return execute(request["Authorization"]);
+            std::string_view token = request["Authorization"];
+            token.remove_prefix(authorization_prefix.size());
+            return execute(token);
         }
     }
-    util::Response execute(std::string token) {
+    util::Response execute(std::string_view token) {
         auto player = game_.GetPlayer(token);
         if (!player) {
             return model::api::errors::no_user_found();
         }
-        const auto &players = game_.GetPlayers(player->GetSession()->GetMap()->GetId());
+        const auto &players = game_.GetPlayers(player->GetSession().GetMap().GetId());
         return responses::ok(players);
     }
 

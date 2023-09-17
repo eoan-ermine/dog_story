@@ -1,5 +1,6 @@
 #include "api.hpp"
 #include <chrono>
+#include <string>
 
 namespace model {
 
@@ -30,15 +31,17 @@ void tag_invoke(value_from_tag, value &value, const JoinResponse &response) {
 }
 
 void tag_invoke(value_from_tag, value &value, const GetPlayersResponse &response) {
+    value = {};
     auto &obj = value.as_object();
 
     for (const auto &[key, value] : response.players) {
-        boost::json::value ident = *value->GetId();
-        obj[ident.as_string()] = {{"name", value->GetName()}};
+        std::string ident = std::to_string(*value->GetId());
+        obj[ident] = {{"name", value->GetName()}};
     }
 }
 
 void tag_invoke(value_from_tag, value &value, const GetStateResponse &response) {
+    value = {};
     auto &obj = value.as_object();
     obj["players"] = object{};
 
