@@ -7,7 +7,7 @@ RUN apt update && \
 	&& \
 	pip3 install conan
 
-COPY conanfile.txt /app/
+COPY conanfilev2.txt /app/
 RUN mkdir /app/build && cd /app/build && \
 	conan profile detect && \
 	conan install ../conanfilev2.txt -of .
