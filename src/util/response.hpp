@@ -41,13 +41,15 @@ class Response : public std::enable_shared_from_this<Response> {
 
     template <typename Send>
     void send(Send &&send_fn) {
-        std::visit([&](auto &&arg) { send_fn(arg); }, response);
+        std::visit([send_fn = std::move(send_fn)](auto &&arg) { send_fn(std::move(arg)); }, response);
     }
 
     template <typename Send>
     void send(Send &&send_fn, Strand api_strand) {
-        auto handle = [self = shared_from_this(), send_fn]() { self->send(send_fn); };
-        boost::beast::net::dispatch(api_strand, handle);
+        boost::beast::net::dispatch(
+            api_strand, [send_fn = std::move(send_fn), response = std::move(this->response)]() mutable {
+                std::visit([send_fn = std::move(send_fn)](auto &&arg) { send_fn(std::move(arg)); }, response);
+            });
     }
 
   private:

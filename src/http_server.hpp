@@ -78,7 +78,8 @@ class Session : public SessionBase, public std::enable_shared_from_this<Session<
         // чтобы продлить время жизни сессии до вызова лямбды.
         // Используется generic-лямбда функция, способная принять response произвольного типа
         request_handler_(stream_.socket().remote_endpoint().address().to_string(), std::move(request),
-                         [self = this->shared_from_this()](auto &&response) { self->Write(std::move(response)); });
+                         [self = this->shared_from_this()]<typename Body, typename Fields>(
+                             http::response<Body, Fields> &&response) { self->Write(std::move(response)); });
     }
 
     RequestHandler request_handler_;
