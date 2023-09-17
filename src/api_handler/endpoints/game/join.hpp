@@ -26,10 +26,10 @@ class JoinEndpoint : public Endpoint {
         }
 
         if (!game_.ContainsSession(map_ident)) {
-            auto &map = game_.GetMap(map_ident);
             if (!game_.ContainsMap(map_ident)) {
                 return model::api::errors::map_not_found();
             }
+            auto &map = game_.GetMap(map_ident);
             game_.AddSession(model::GameSession(map));
         }
 
