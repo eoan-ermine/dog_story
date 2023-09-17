@@ -25,15 +25,15 @@ class JoinEndpoint : public Endpoint {
             return model::api::errors::invalid_username();
         }
 
-        std::shared_ptr<model::GameSession> session{game_.FindSession(map_ident)};
-        if (!session) {
-            std::shared_ptr<model::Map> map{game_.FindMap(map_ident)};
-            if (!map) {
+        if (!game_.ContainsSession(map_ident)) {
+            auto &map = game_.GetMap(map_ident);
+            if (!game_.ContainsMap(map_ident)) {
                 return model::api::errors::map_not_found();
             }
             game_.AddSession(model::GameSession(map));
         }
 
+        auto &session = game_.GetSession(map_ident);
         auto [player, token] = game_.AddPlayer(std::move(username), session);
         return responses::ok(player, token);
     }

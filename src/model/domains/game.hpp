@@ -97,17 +97,17 @@ class GameSession {
   public:
     using Dogs = std::unordered_map<Dog::Id, std::shared_ptr<Dog>>;
 
-    GameSession(const std::shared_ptr<Map> &map) : map_(map) {}
+    GameSession(const Map &map) : map_(map) {}
 
     void AddDog(std::shared_ptr<Dog> dog) { dogs_.insert({dog->GetId(), std::move(dog)}); }
 
     const Dogs &GetDogs() const { return dogs_; }
 
-    std::shared_ptr<Map> GetMap() const { return map_; }
+    const Map &GetMap() const { return map_; }
 
   private:
     Dogs dogs_;
-    std::shared_ptr<Map> map_;
+    const Map &map_;
 };
 
 // Deserialize json value to game session structure
@@ -127,21 +127,21 @@ class Player {
   public:
     using Id = Dog::Id;
 
-    Player(std::string name, std::shared_ptr<GameSession> session, bool randomize_spawn_points) : session_(session) {
-        dog_ = Dog::Create(name, *session->GetMap(), randomize_spawn_points);
-        session->AddDog(dog_);
+    Player(std::string name, GameSession &session, bool randomize_spawn_points) : session_(session) {
+        dog_ = Dog::Create(name, session.GetMap(), randomize_spawn_points);
+        session.AddDog(dog_);
     }
 
     Id GetId() const { return dog_->GetId(); }
 
     std::string_view GetName() const { return dog_->GetName(); }
 
-    std::shared_ptr<GameSession> GetSession() const { return session_; }
+    const GameSession &GetSession() const { return session_; }
 
     std::shared_ptr<Dog> GetDog() const { return dog_; }
 
   private:
-    std::shared_ptr<GameSession> session_;
+    GameSession &session_;
     std::shared_ptr<Dog> dog_;
 };
 
@@ -187,11 +187,11 @@ class Players {
   public:
     using PlayersContainer = std::unordered_map<Map::Id, std::unordered_map<Dog::Id, std::shared_ptr<Player>>>;
 
-    std::shared_ptr<Player> Add(std::string name, std::shared_ptr<GameSession> session, bool randomize_spawn_points) {
+    std::shared_ptr<Player> Add(std::string name, GameSession &session, bool randomize_spawn_points) {
         auto player = std::make_shared<Player>(name, session, randomize_spawn_points);
         const auto &dog = player->GetDog();
 
-        players_[session->GetMap()->GetId()][dog->GetId()] = player;
+        players_[session.GetMap().GetId()][dog->GetId()] = player;
         return player;
     }
 
@@ -223,26 +223,24 @@ class Game {
 
     const Maps &GetMaps() const noexcept { return maps_; }
 
-    Map *FindMap(const Map::Id &id) noexcept {
-        if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {
-            return &maps_.at(it->second);
-        }
-        return nullptr;
-    }
+    bool ContainsMap(const Map::Id &id) noexcept { return map_id_to_index_.contains(id); }
+
+    Map &GetMap(const Map::Id &id) noexcept { return maps_[map_id_to_index_.at(id)]; }
 
     void AddSession(GameSession &&session) { sessions_.push_back(std::move(session)); }
 
-    GameSession *FindSession(const Map::Id &id) noexcept {
-        auto it = std::find_if(sessions_.begin(), sessions_.end(),
-                               [&](const auto &session) { return id == session.GetMap()->GetId(); });
-        if (it == sessions_.end())
-            return nullptr;
-        return &(*it);
+    bool ContainsSession(const Map::Id &id) noexcept {
+        return std::find_if(sessions_.begin(), sessions_.end(),
+                            [&](const auto &session) { return id == session.GetMap().GetId(); }) != sessions_.end();
     }
 
-    std::pair<std::shared_ptr<Player>, Token> AddPlayer(std::string username, std::shared_ptr<GameSession> session) {
-        auto player =
-            players_.Add(std::move(username), std::shared_ptr<model::GameSession>(session), randomize_spawn_points_);
+    GameSession &GetSession(const Map::Id &id) noexcept {
+        return *std::find_if(sessions_.begin(), sessions_.end(),
+                             [&](const auto &session) { return id == session.GetMap().GetId(); });
+    }
+
+    std::pair<std::shared_ptr<Player>, Token> AddPlayer(std::string username, GameSession &session) {
+        auto player = players_.Add(std::move(username), session, randomize_spawn_points_);
         auto token = player_tokens_.AddPlayer(player);
         return {player, token};
     }
@@ -275,9 +273,9 @@ class Game {
                 auto current_point = Point{static_cast<int>(std::round(x)), static_cast<int>(std::round(y))};
                 auto [point_x, point_y] = current_point;
 
-                auto map = player->GetSession()->GetMap();
+                auto map = player->GetSession().GetMap();
 
-                auto road = map->GetPointsToRoads()
+                auto road = map.GetPointsToRoads()
                                 .at(dx != 0 ? Orientation::HORIZONTAL : Orientation::VERTICAL)
                                 .at(current_point);
                 auto [start_x, start_y] = road->GetStart();

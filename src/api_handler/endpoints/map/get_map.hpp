@@ -14,18 +14,16 @@ class GetMapEndpoint : public Endpoint {
         return execute(model::Map::Id{std::string{map_ident}});
     }
     util::Response execute(model::Map::Id map_ident) {
-        const auto *map_ptr = game_.FindMap(map_ident);
-
-        if (!map_ptr)
+        if (!game_.ContainsMap(map_ident))
             return model::api::errors::map_not_found();
         else
-            return responses::ok(map_ptr);
+            return responses::ok(game_.GetMap(map_ident));
     }
 
   private:
     struct responses {
-        static util::Response ok(const model::Map *map_ptr) {
-            return util::Response::Json(http::status::ok, json::value_from(*map_ptr));
+        static util::Response ok(const model::Map &map) {
+            return util::Response::Json(http::status::ok, json::value_from(map));
         }
     };
     static constexpr std::string_view endpoint{"/api/v1/maps/"};
